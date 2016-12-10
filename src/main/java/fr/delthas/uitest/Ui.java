@@ -3,26 +3,36 @@ package fr.delthas.uitest;
 import java.util.HashSet;
 import java.util.Set;
 
-public class Ui implements InputState {
+public final class Ui implements InputState {
+  private static final Ui instance;
 
   static {
     instance = new Ui();
   }
-
-  private static final Ui instance;
 
   private Stack stack = new Stack();
   private Window window = new Window();
   private Set<Integer> keysState = new HashSet<>(20);
   private Set<Integer> mouseState = new HashSet<>(3);
   private int scroll = 0;
-
   private double mouseX, mouseY;
 
   private Ui() {}
 
-  public void create(String title) {
-    window.create(title, true);
+  public static int getWidth() {
+    return Window.getWidth();
+  }
+
+  public static int getHeight() {
+    return Window.getHeight();
+  }
+
+  public static Ui getUi() {
+    return instance;
+  }
+
+  public void create(String title, Icon icon) {
+    window.create(title, icon, true);
   }
 
   public void destroy() {
@@ -86,20 +96,11 @@ public class Ui implements InputState {
     return mouseState.contains(button);
   }
 
+  Window getWindow() {
+    return window;
+  }
+
   public void setVisible(boolean visible) {
     window.setVisible(visible);
   }
-
-  public static int getWidth() {
-    return Window.getWidth();
-  }
-
-  public static int getHeight() {
-    return Window.getHeight();
-  }
-
-  public static Ui getUi() {
-    return instance;
-  }
-
 }

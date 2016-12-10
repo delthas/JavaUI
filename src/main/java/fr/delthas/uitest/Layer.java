@@ -4,10 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Layer {
-
-  private boolean opaque;
-
   protected List<Component> components = new ArrayList<>();
+  private boolean opaque;
 
   protected void reset() {
     for (Component component : components) {
@@ -15,9 +13,14 @@ public class Layer {
     }
   }
 
-  public void addComponent(Component component, double x, double y, double width, double height) {
+  public Layer addComponent(double x, double y, double width, double height, Component component) {
     component.reset(this, x, y, width, height);
     components.add(component);
+    return this;
+  }
+
+  public Layer addComponent(Component component) {
+    return addComponent(0, 0, Ui.getWidth(), Ui.getHeight(), component);
   }
 
   protected boolean pushMouseMove(double x, double y) {
@@ -55,6 +58,11 @@ public class Layer {
     }
   }
 
+  public Layer push() {
+    Ui.getUi().push(this);
+    return this;
+  }
+
   public boolean isOpaque() {
     return opaque;
   }
@@ -62,5 +70,4 @@ public class Layer {
   protected void setOpaque(boolean opaque) {
     this.opaque = opaque;
   }
-
 }

@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.ListIterator;
 
 public class Stack {
-
   protected List<Layer> layers = new ArrayList<>();
 
   public void push(Layer layer) {
@@ -13,8 +12,9 @@ public class Stack {
   }
 
   public Layer pop() {
-    if (layers.isEmpty())
+    if (layers.isEmpty()) {
       return null;
+    }
     return layers.remove(layers.size() - 1);
   }
 
@@ -56,5 +56,4 @@ public class Stack {
       it.next().render(inputState, drawer);
     }
   }
-
 }

@@ -30,6 +30,6 @@ void main()
         offset = vec2(circle.z, circle.w);
         break;
     }
-    
+
     gl_Position = vec4((offset + circle.xy), 0.0, 1.0);
 }

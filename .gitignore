@@ -32,5 +32,10 @@ local.properties
 .classpath
 .target
 
+# intellij files
+
+*.iml
+
+
 # uitest specific files
 

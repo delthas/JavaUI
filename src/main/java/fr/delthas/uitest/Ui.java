@@ -61,6 +61,7 @@ public final class Ui implements InputState {
   void pushMouseMove(double x, double y) {
     mouseX = x;
     mouseY = y;
+    stack.pushMouseMove(x, y);
   }
 
   void pushMouseButton(int button, boolean down) {
@@ -84,6 +85,28 @@ public final class Ui implements InputState {
   void pushMouseScroll(int scroll) {
     // TODO push instead of storing it
     this.scroll += scroll;
+  }
+
+  public void getFontMetrics(Font font, float size, float[] metrics) {
+    window.getFontMetrics(font, size, metrics);
+  }
+
+  public float getTextWidth(String text, Font font, float size) {
+    return window.getTextWidth(text, font, size);
+  }
+
+  public float getTextWidth(String text, Font font, float size, float[] sizes) {
+    return window.getTextWidth(text, font, size, sizes);
+  }
+
+  @Override
+  public double getMouseX(Component component) {
+    return mouseX - component.getX();
+  }
+
+  @Override
+  public double getMouseY(Component component) {
+    return mouseY - component.getY();
   }
 
   @Override

@@ -9,6 +9,7 @@ import org.lwjgl.opengl.GLDebugMessageCallback;
 import org.lwjgl.stb.STBTTAlignedQuad;
 import org.lwjgl.stb.STBTTBakedChar;
 import org.lwjgl.stb.STBTTBakedChar.Buffer;
+import org.lwjgl.stb.STBTTFontinfo;
 import org.lwjgl.system.Configuration;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
@@ -31,8 +32,7 @@ import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL43.*;
 import static org.lwjgl.stb.STBImage.stbi_image_free;
 import static org.lwjgl.stb.STBImage.stbi_load_from_memory;
-import static org.lwjgl.stb.STBTruetype.stbtt_BakeFontBitmap;
-import static org.lwjgl.stb.STBTruetype.stbtt_GetBakedQuad;
+import static org.lwjgl.stb.STBTruetype.*;
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.system.MemoryUtil.NULL;
 import static org.lwjgl.system.MemoryUtil.memFree;
@@ -178,7 +178,7 @@ class Window implements Drawer {
     glfwSetCursorPosCallback(window, cursorPosCallback = new GLFWCursorPosCallback() {
       @Override
       public void invoke(long window, double xpos, double ypos) {
-        Ui.getUi().pushMouseMove(xpos / width, (height - ypos) / height);
+        Ui.getUi().pushMouseMove(xpos, height - ypos);
       }
     });
 
@@ -461,7 +461,10 @@ class Window implements Drawer {
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-      return new FontData(texture, chars);
+      STBTTFontinfo info = STBTTFontinfo.malloc();
+      stbtt_InitFont(info, fontBuffer.get(font));
+
+      return new FontData(texture, chars, info);
     });
   }
 
@@ -554,10 +557,51 @@ class Window implements Drawer {
   }
 
   @Override
-  public void drawText(double x, double y, String text, Font font, float size, boolean centered) {
+  public float getTextWidth(String text, Font font, float size, float[] sizes) {
+    try (MemoryStack stack = stackPush()) {
+      FloatBuffer xpos = stack.floats(0);
+      FloatBuffer ypos = stack.floats(0);
+
+      STBTTAlignedQuad q = STBTTAlignedQuad.mallocStack(stack);
+
+      FontData fontData = getFontData(font, size);
+
+      for (int i = 0; i < text.length(); i++) {
+        char c = text.charAt(i);
+        if (c < 32 || 128 <= c) {
+          continue;
+        }
+        stbtt_GetBakedQuad(fontData.bakedChars, 512, 512, c - 32, xpos, ypos, q, true);
+        if (sizes != null && sizes.length >= i + 1) {
+          sizes[i] = xpos.get(0);
+        }
+      }
+      return xpos.get(0);
+    }
+  }
+
+  @Override
+  public void getFontMetrics(Font font, float size, float[] metrics) {
+    if (metrics == null || metrics.length == 0) {
+      return;
+    }
+    int[] ascent = new int[1];
+    int[] descent = new int[1];
+    int[] lineGap = new int[1];
+    FontData fontData = getFontData(font, size);
+    stbtt_GetFontVMetrics(fontData.info, ascent, descent, lineGap);
+    float scale = stbtt_ScaleForMappingEmToPixels(fontData.info, size);
+    metrics[0] = descent[0] * scale;
+    if (metrics.length >= 2) {
+      metrics[1] = ascent[0] * scale;
+    }
+  }
+
+  @Override
+  public float drawText(double x, double y, String text, Font font, float size, boolean xCentered, boolean yCentered, float[] sizes) {
     try (MemoryStack stack = stackPush()) {
       FloatBuffer xpos = stack.floats((float) x);
-      FloatBuffer ypos = stack.floats((float) y);
+      FloatBuffer ypos = stack.floats((float) (getHeight() - y));
 
       STBTTAlignedQuad q = STBTTAlignedQuad.mallocStack(stack);
 
@@ -568,9 +612,10 @@ class Window implements Drawer {
 
       glBindTexture(GL_TEXTURE_2D, fontData.texture);
 
-      float offset = 0;
+      float xOffset = 0;
+      float yOffset = 0;
 
-      if (centered) {
+      if (xCentered) {
         for (int i = 0; i < text.length(); i++) {
           char c = text.charAt(i);
           if (c < 32 || 128 <= c) {
@@ -578,8 +623,16 @@ class Window implements Drawer {
           }
           stbtt_GetBakedQuad(fontData.bakedChars, 512, 512, c - 32, xpos, ypos, q, true);
         }
-        offset = (float) ((xpos.get(0) - x) / 2);
+        xOffset = (float) ((xpos.get(0) - x) / 2);
         xpos.put(0, (float) x);
+      }
+
+      if (yCentered) {
+        int[] ascent = new int[1];
+        int[] descent = new int[1];
+        int[] lineGap = new int[1];
+        stbtt_GetFontVMetrics(fontData.info, ascent, descent, lineGap);
+        yOffset = (descent[0] + ascent[0]) * stbtt_ScaleForMappingEmToPixels(fontData.info, size) / 2;
       }
 
       for (int i = 0; i < text.length(); i++) {
@@ -588,23 +641,23 @@ class Window implements Drawer {
           continue;
         }
 
-        float oldX = xpos.get(0);
-        float oldY = ypos.get(0);
-
         stbtt_GetBakedQuad(fontData.bakedChars, 512, 512, c - 32, xpos, ypos, q, true);
 
-        glUniform4f(indexFontFontPosition, (float) ((translateX + oldX + q.x0() - oldX - offset) * 2 / width) - 1,
-                (float) ((translateY + oldY + y + y - oldY - q.y0()) * 2 / height) - 1,
-                (float) ((translateX + oldX + q.x1() - oldX - offset) * 2 / width) - 1,
-                (float) ((translateY + oldY + y + y - oldY - q.y1()) * 2 / height) - 1);
+        if (sizes != null && sizes.length >= i + 1) {
+          sizes[i] = (float) (xpos.get(0) - x);
+        }
+
+        glUniform4f(indexFontFontPosition, (float) ((translateX + q.x0() - xOffset) * 2 / width) - 1,
+                (float) ((translateY + getHeight() - q.y0() - yOffset) * 2 / height) - 1,
+                (float) ((translateX + q.x1() - xOffset) * 2 / width) - 1,
+                (float) ((translateY + getHeight() - q.y1() - yOffset) * 2 / height) - 1);
         glUniform4f(indexFontImagePosition, q.s0(), q.t0(), q.s1(), q.t1());
         glDrawArrays(GL_TRIANGLES, 0, 6);
-
-        xpos.put(0, oldX + xpos.get(0) - oldX);
-        ypos.put(0, oldY + ypos.get(0) - oldY);
       }
 
       glUseProgram(0);
+
+      return (float) (xpos.get(0) - x);
     }
   }
 
@@ -653,10 +706,12 @@ class Window implements Drawer {
   private static class FontData {
     final int texture;
     final Buffer bakedChars;
+    final STBTTFontinfo info;
 
-    FontData(int texture, Buffer bakedChars) {
+    FontData(int texture, Buffer bakedChars, STBTTFontinfo info) {
       this.texture = texture;
       this.bakedChars = bakedChars;
+      this.info = info;
     }
   }
 }

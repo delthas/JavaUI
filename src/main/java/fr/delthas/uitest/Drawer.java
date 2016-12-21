@@ -63,11 +63,24 @@ public interface Drawer {
 
   void drawImage(double x, double y, double width, double height, double s1, double t1, double s2, double t2, Image image);
 
-  default void drawText(double x, double y, String text, Font font, float size) {
-    drawText(x, y, text, font, size);
+  // TODO
+  // default void drawText(double x, double y, String text, Font font, float size) {
+  //  drawText(x, y, text, font, size);
+  // }
+
+  void getFontMetrics(Font font, float size, float[] metrics);
+
+  default float getTextWidth(String text, Font font, float size) {
+    return getTextWidth(text, font, size, null);
   }
 
-  void drawText(double x, double y, String text, Font font, float size, boolean centered);
+  float getTextWidth(String text, Font font, float size, float[] sizes);
+
+  default float drawText(double x, double y, String text, Font font, float size, boolean xCentered, boolean yCentered) {
+    return drawText(x, y, text, font, size, xCentered, yCentered, null);
+  }
+
+  float drawText(double x, double y, String text, Font font, float size, boolean xCentered, boolean yCentered, float[] sizes);
 
   void setColor(Color color);
 }

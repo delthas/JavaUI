@@ -82,9 +82,17 @@ public final class Ui implements InputState {
     stack.pushKeyButton(mouseX, mouseY, key, down);
   }
 
+  void pushChar(int codepoint, int mods) {
+    stack.pushChar(mouseX, mouseY, codepoint, mods);
+  }
+
   void pushMouseScroll(int scroll) {
     // TODO push instead of storing it
     this.scroll += scroll;
+  }
+
+  public float getLineHeight(Font font, float size) {
+    return window.getLineHeight(font, size);
   }
 
   public void getFontMetrics(Font font, float size, float[] metrics) {
@@ -99,14 +107,22 @@ public final class Ui implements InputState {
     return window.getTextWidth(text, font, size, sizes);
   }
 
+  public String getClipboard() {
+    return window.getClipboard();
+  }
+
+  public void setClipboard(String clipboard) {
+    window.setClipboard(clipboard);
+  }
+
   @Override
   public double getMouseX(Component component) {
-    return mouseX - component.getX();
+    return mouseX - (component == null ? 0 : component.getX());
   }
 
   @Override
   public double getMouseY(Component component) {
-    return mouseY - component.getY();
+    return mouseY - (component == null ? 0 : component.getY());
   }
 
   @Override

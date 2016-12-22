@@ -47,6 +47,10 @@ public final class Image {
     return Ui.getUi().getWindow().createImage(buffer, ignoreAlpha);
   }
 
+  public static Image createImageRaw(ByteBuffer buffer, int width, int height, boolean ignoreAlpha) {
+    return Ui.getUi().getWindow().createImageRaw(buffer, width, height, ignoreAlpha);
+  }
+
   public int getWidth() {
     return width;
   }

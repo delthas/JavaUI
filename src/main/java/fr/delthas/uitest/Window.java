@@ -6,10 +6,7 @@ import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GLDebugMessageCallback;
-import org.lwjgl.stb.STBTTAlignedQuad;
-import org.lwjgl.stb.STBTTBakedChar;
-import org.lwjgl.stb.STBTTBakedChar.Buffer;
-import org.lwjgl.stb.STBTTFontinfo;
+import org.lwjgl.stb.*;
 import org.lwjgl.system.Configuration;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
@@ -34,8 +31,7 @@ import static org.lwjgl.stb.STBImage.stbi_image_free;
 import static org.lwjgl.stb.STBImage.stbi_load_from_memory;
 import static org.lwjgl.stb.STBTruetype.*;
 import static org.lwjgl.system.MemoryStack.stackPush;
-import static org.lwjgl.system.MemoryUtil.NULL;
-import static org.lwjgl.system.MemoryUtil.memFree;
+import static org.lwjgl.system.MemoryUtil.*;
 
 @SuppressWarnings({"resource", "unused"})
 class Window implements Drawer {
@@ -59,6 +55,8 @@ class Window implements Drawer {
   private double translateX, translateY;
   @SuppressWarnings("FieldCanBeLocal")
   private GLFWKeyCallback keyCallback;
+  @SuppressWarnings("FieldCanBeLocal")
+  private GLFWCharModsCallback charCallback;
   @SuppressWarnings("FieldCanBeLocal")
   private GLFWCursorPosCallback cursorPosCallback;
   @SuppressWarnings("FieldCanBeLocal")
@@ -95,6 +93,8 @@ class Window implements Drawer {
     glfwWindowHint(GLFW_REFRESH_RATE, vidmode.refreshRate());
     width = vidmode.width();
     height = vidmode.height();
+
+    glfwWindowHint(GLFW_DECORATED, GL_FALSE);
   }
 
   private static String readFile(String name) {
@@ -122,14 +122,23 @@ class Window implements Drawer {
     int[] x = new int[1];
     int[] y = new int[1];
     ByteBuffer result = stbi_load_from_memory(buffer, x, y, new int[1], ignoreAlpha ? 3 : 4);
+    Image image = createImageRaw(result, x[0], y[0], ignoreAlpha);
+    stbi_image_free(result);
+    return image;
+  }
+
+  Image createImageRaw(ByteBuffer buffer, int width, int height, boolean ignoreAlpha) {
+    if (buffer.remaining() == 0) // automatically flip if clearly meant to be flipped
+    {
+      buffer.flip();
+    }
     int texture = glGenTextures();
     glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, ignoreAlpha ? GL_RGB8 : GL_RGBA8, x[0], y[0], 0, ignoreAlpha ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, result);
+    glTexImage2D(GL_TEXTURE_2D, 0, ignoreAlpha ? GL_RGB8 : GL_RGBA8, width, height, 0, ignoreAlpha ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, buffer);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-    stbi_image_free(result);
     texturesIndexes.add(texture);
-    return new Image(x[0], y[0], texture);
+    return new Image(width, height, texture);
   }
 
   void create(String title, Icon icon, boolean fullscreen) {
@@ -175,6 +184,13 @@ class Window implements Drawer {
       }
     });
 
+    glfwSetCharModsCallback(window, charCallback = new GLFWCharModsCallback() {
+      @Override
+      public void invoke(long window, int codepoint, int mods) {
+        Ui.getUi().pushChar(codepoint, mods);
+      }
+    });
+
     glfwSetCursorPosCallback(window, cursorPosCallback = new GLFWCursorPosCallback() {
       @Override
       public void invoke(long window, double xpos, double ypos) {
@@ -204,6 +220,9 @@ class Window implements Drawer {
       glDebugMessageCallback(new GLDebugMessageCallback() {
         @Override
         public void invoke(int source, int type, int id, int severity, int length, long message, long userParam) {
+          if (id == 131185) {
+            return;
+          }
           String sourceS;
           switch (source) {
             case GL_DEBUG_SOURCE_API:
@@ -276,7 +295,7 @@ class Window implements Drawer {
               break;
           }
           System.err.println("Source: " + sourceS + " - Type: " + typeS + " - Sévérité: " + severityS + " - Message: "
-                  + MemoryUtil.memUTF8(MemoryUtil.memByteBuffer(message, length)));
+                  + MemoryUtil.memUTF8(MemoryUtil.memByteBuffer(message, length)) + " " + id);
           if (severity != GL_DEBUG_SEVERITY_NOTIFICATION) {
             Thread.dumpStack();
           }
@@ -450,21 +469,33 @@ class Window implements Drawer {
 
   private FontData getFontData(Font font, float size) {
     return fontData.computeIfAbsent(new FontKey(font, size), key -> {
-      ByteBuffer bitmap = BufferUtils.createByteBuffer(512 * 512);
-      Buffer chars = STBTTBakedChar.malloc(96);
+      ByteBuffer data = fontBuffer.get(font);
+      STBTTPackedchar.Buffer[] charData = {STBTTPackedchar.malloc(128 - 32), STBTTPackedchar.malloc(256 - 192)};
+      ByteBuffer bitmap = BufferUtils.createByteBuffer(1024 * 1024);
+      try (STBTTPackContext pc = STBTTPackContext.malloc()) {
+        stbtt_PackBegin(pc, bitmap, 1024, 1024, 0, 1);
+        stbtt_PackSetOversampling(pc, 3, 1);
+        STBTTPackRange.Buffer ranges = STBTTPackRange.malloc(2);
+        memSet(ranges.address(), 0, ranges.capacity() * STBTTPackRange.SIZEOF);
+        ranges.get(0).font_size(size).first_unicode_codepoint_in_range(32).num_chars(128 - 32).chardata_for_range(charData[0]);
+        ranges.get(1).font_size(size).first_unicode_codepoint_in_range(192).num_chars(256 - 192).chardata_for_range(charData[1]);
+
+        stbtt_PackFontRanges(pc, data, 0, ranges);
+        ranges.free();
+        stbtt_PackEnd(pc);
+      }
 
       glBindVertexArray(texVao);
-      stbtt_BakeFontBitmap(fontBuffer.get(font), size, bitmap, 512, 512, 32, chars);
       int texture = glGenTextures();
       glBindTexture(GL_TEXTURE_2D, texture);
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, 512, 512, 0, GL_RED, GL_UNSIGNED_BYTE, bitmap);
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, 1024, 1024, 0, GL_RED, GL_UNSIGNED_BYTE, bitmap);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
       STBTTFontinfo info = STBTTFontinfo.malloc();
       stbtt_InitFont(info, fontBuffer.get(font));
 
-      return new FontData(texture, chars, info);
+      return new FontData(texture, charData, info);
     });
   }
 
@@ -482,7 +513,9 @@ class Window implements Drawer {
     glfwDestroyWindow(window);
     glfwTerminate();
     fontData.forEach((font, data) -> {
-      data.bakedChars.free();
+      for (STBTTPackedchar.Buffer buffer : data.charData) {
+        buffer.free();
+      }
       glDeleteTextures(data.texture);
     });
     texturesIndexes.forEach(GL11::glDeleteTextures);
@@ -567,11 +600,26 @@ class Window implements Drawer {
       FontData fontData = getFontData(font, size);
 
       for (int i = 0; i < text.length(); i++) {
-        char c = text.charAt(i);
-        if (c < 32 || 128 <= c) {
+        if (sizes != null && sizes.length >= i + 1) {
+          sizes[i] = xpos.get(0);
+        }
+        int c = text.codePointAt(i);
+        int index;
+        int position;
+        if (c < 32) {
+          continue;
+        } else if (c < 128) {
+          index = 0;
+          position = c - 32;
+        } else if (c < 192) {
+          continue;
+        } else if (c < 256) {
+          index = 1;
+          position = c - 192;
+        } else {
           continue;
         }
-        stbtt_GetBakedQuad(fontData.bakedChars, 512, 512, c - 32, xpos, ypos, q, true);
+        stbtt_GetPackedQuad(fontData.charData[index], 1024, 1024, position, xpos, ypos, q, false);
         if (sizes != null && sizes.length >= i + 1) {
           sizes[i] = xpos.get(0);
         }
@@ -590,10 +638,13 @@ class Window implements Drawer {
     int[] lineGap = new int[1];
     FontData fontData = getFontData(font, size);
     stbtt_GetFontVMetrics(fontData.info, ascent, descent, lineGap);
-    float scale = stbtt_ScaleForMappingEmToPixels(fontData.info, size);
-    metrics[0] = descent[0] * scale;
+    float scale = stbtt_ScaleForPixelHeight(fontData.info, size);
+    metrics[0] = ascent[0] * scale;
     if (metrics.length >= 2) {
-      metrics[1] = ascent[0] * scale;
+      metrics[1] = descent[0] * scale;
+      if (metrics.length >= 3) {
+        metrics[2] = lineGap[0] * scale;
+      }
     }
   }
 
@@ -616,15 +667,7 @@ class Window implements Drawer {
       float yOffset = 0;
 
       if (xCentered) {
-        for (int i = 0; i < text.length(); i++) {
-          char c = text.charAt(i);
-          if (c < 32 || 128 <= c) {
-            continue;
-          }
-          stbtt_GetBakedQuad(fontData.bakedChars, 512, 512, c - 32, xpos, ypos, q, true);
-        }
-        xOffset = (float) ((xpos.get(0) - x) / 2);
-        xpos.put(0, (float) x);
+        xOffset = getTextWidth(text, font, size) / 2;
       }
 
       if (yCentered) {
@@ -632,16 +675,31 @@ class Window implements Drawer {
         int[] descent = new int[1];
         int[] lineGap = new int[1];
         stbtt_GetFontVMetrics(fontData.info, ascent, descent, lineGap);
-        yOffset = (descent[0] + ascent[0]) * stbtt_ScaleForMappingEmToPixels(fontData.info, size) / 2;
+        yOffset = (descent[0] + ascent[0]) * stbtt_ScaleForPixelHeight(fontData.info, size) / 2;
       }
 
-      for (int i = 0; i < text.length(); i++) {
-        char c = text.charAt(i);
-        if (c < 32 || 128 <= c) {
+      int codepointCount = text.codePointCount(0, text.length());
+      for (int i = 0; i < codepointCount; i++) {
+        if (sizes != null && sizes.length >= i + 1) {
+          sizes[i] = (float) (xpos.get(0) - x);
+        }
+        int c = text.codePointAt(i);
+        int index;
+        int position;
+        if (c < 32) {
+          continue;
+        } else if (c < 128) {
+          index = 0;
+          position = c - 32;
+        } else if (c < 192) {
+          continue;
+        } else if (c < 256) {
+          index = 1;
+          position = c - 192;
+        } else {
           continue;
         }
-
-        stbtt_GetBakedQuad(fontData.bakedChars, 512, 512, c - 32, xpos, ypos, q, true);
+        stbtt_GetPackedQuad(fontData.charData[index], 1024, 1024, position, xpos, ypos, q, false);
 
         if (sizes != null && sizes.length >= i + 1) {
           sizes[i] = (float) (xpos.get(0) - x);
@@ -675,6 +733,14 @@ class Window implements Drawer {
     glfwPollEvents();
   }
 
+  public String getClipboard() {
+    return glfwGetClipboardString(window);
+  }
+
+  public void setClipboard(String clipboard) {
+    glfwSetClipboardString(window, clipboard);
+  }
+
   private static class FontKey {
     final Font font;
     final float size;
@@ -705,12 +771,12 @@ class Window implements Drawer {
 
   private static class FontData {
     final int texture;
-    final Buffer bakedChars;
+    final STBTTPackedchar.Buffer[] charData;
     final STBTTFontinfo info;
 
-    FontData(int texture, Buffer bakedChars, STBTTFontinfo info) {
+    FontData(int texture, STBTTPackedchar.Buffer[] charData, STBTTFontinfo info) {
       this.texture = texture;
-      this.bakedChars = bakedChars;
+      this.charData = charData;
       this.info = info;
     }
   }

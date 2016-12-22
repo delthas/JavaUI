@@ -45,6 +45,15 @@ public class Stack {
     }
   }
 
+  protected void pushChar(double x, double y, int codepoint, int mods) {
+    ListIterator<Layer> it = layers.listIterator(layers.size());
+    while (it.hasPrevious()) {
+      if (it.previous().pushChar(x, y, codepoint, mods)) {
+        return;
+      }
+    }
+  }
+
   protected void render(InputState inputState, Drawer drawer) {
     ListIterator<Layer> it = layers.listIterator(layers.size());
     while (it.hasPrevious() && !it.previous().isOpaque()) {

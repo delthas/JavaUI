@@ -46,7 +46,11 @@ public interface Drawer {
   }
 
   default void drawImage(double x, double y, Image image) {
-    drawImage(x, y, image.getWidth(), image.getHeight(), image, true);
+    drawImage(x, y, image, true);
+  }
+
+  default void drawImage(double x, double y, Image image, boolean centered) {
+    drawImage(x, y, image.getWidth(), image.getHeight(), image, centered);
   }
 
   default void drawImage(double x, double y, double width, double height, Image image) {
@@ -67,6 +71,12 @@ public interface Drawer {
   // default void drawText(double x, double y, String text, Font font, float size) {
   //  drawText(x, y, text, font, size);
   // }
+
+  default float getLineHeight(Font font, float size) {
+    float[] metrics = new float[3];
+    getFontMetrics(font, size, metrics);
+    return metrics[0] - metrics[1] + metrics[2];
+  }
 
   void getFontMetrics(Font font, float size, float[] metrics);
 

@@ -50,6 +50,15 @@ public class Layer {
     return false;
   }
 
+  protected boolean pushChar(double x, double y, int codepoint, int mods) {
+    for (Component component : components) {
+      if (component.pushChar(x - component.getX(), y - component.getY(), codepoint, mods)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   protected void render(InputState inputState, Drawer drawer) {
     for (Component component : components) {
       drawer.pushTranslate(component.getX(), component.getY());

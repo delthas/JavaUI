@@ -6,6 +6,7 @@ public class Component {
   private double y;
   private double width;
   private double height;
+  private boolean enabled = true;
 
   @SuppressWarnings("EmptyMethod")
   protected void reset() {
@@ -35,9 +36,22 @@ public class Component {
     return false;
   }
 
+  @SuppressWarnings("SameReturnValue")
+  protected boolean pushChar(double x, double y, int codepoint, int mods) {
+    return false;
+  }
+
   @SuppressWarnings("EmptyMethod")
   protected void render(InputState inputState, Drawer drawer) {
 
+  }
+
+  public boolean isEnabled() {
+    return enabled;
+  }
+
+  public void setEnabled(boolean enabled) {
+    this.enabled = enabled;
   }
 
   public Layer getLayer() {

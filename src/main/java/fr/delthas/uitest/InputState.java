@@ -1,7 +1,15 @@
 package fr.delthas.uitest;
 
 public interface InputState {
+  default double getMouseX() {
+    return getMouseX(null);
+  }
+
   double getMouseX(Component component);
+
+  default double getMouseY() {
+    return getMouseY(null);
+  }
 
   double getMouseY(Component component);
 

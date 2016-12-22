@@ -17,7 +17,7 @@ final class Utils {
   }
 
   static BufferedInputStream getResource(String path) throws IOException {
-    InputStream is = Utils.class.getResourceAsStream("/" + path);
+    InputStream is = Utils.class.getResourceAsStream(path.startsWith("/") ? path : "/" + path);
     if (is == null) {
       is = Files.newInputStream(Paths.get(path));
     }

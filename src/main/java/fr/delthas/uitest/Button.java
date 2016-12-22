@@ -1,9 +1,4 @@
-package fr.delthas.uitest.test;
-
-import fr.delthas.uitest.Component;
-import fr.delthas.uitest.Drawer;
-import fr.delthas.uitest.Font;
-import fr.delthas.uitest.InputState;
+package fr.delthas.uitest;
 
 import java.awt.*;
 import java.util.function.BiConsumer;
@@ -13,13 +8,25 @@ public class Button extends Component {
   private boolean down = false;
   private BiConsumer<Double, Double> listener;
 
+  public Button() {
+
+  }
+
+  public Button(String text) {
+    setText(text);
+  }
+
   @Override
   protected void render(InputState inputState, Drawer drawer) {
-    drawer.setColor(Color.WHITE);
+    if (isEnabled() && isInBounds(inputState.getMouseX(this), inputState.getMouseY(this))) {
+      drawer.setColor(Color.WHITE);
+    } else {
+      drawer.setColor(Color.GRAY);
+    }
     drawer.fillRectangle(0, 0, getWidth(), getHeight(), false);
     drawer.setColor(Color.BLACK);
     drawer.fillRectangle(1, 1, getWidth() - 2, getHeight() - 2, false);
-    drawer.setColor(down ? Color.WHITE : Color.LIGHT_GRAY);
+    drawer.setColor(!isEnabled() ? Color.WHITE : down ? Color.WHITE : Color.LIGHT_GRAY);
     drawer.drawText(getWidth() / 2, getHeight() / 2, text, Font.COMIC, 16, true, true);
   }
 
@@ -28,10 +35,12 @@ public class Button extends Component {
     if (button != 0) {
       return false;
     }
-    if (down && isInBounds(x, y)) {
-      this.down = true;
-      if (listener != null) {
-        listener.accept(x, y);
+    if (isEnabled() && down && isInBounds(x, y)) {
+      if (!this.down) {
+        this.down = true;
+        if (listener != null) {
+          listener.accept(x, y);
+        }
       }
       return true;
     }

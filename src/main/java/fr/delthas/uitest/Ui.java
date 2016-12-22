@@ -115,6 +115,10 @@ public final class Ui implements InputState {
     window.setClipboard(clipboard);
   }
 
+  public void setCursor(Icon icon, int xOffset, int yOffset) {
+    window.setCursor(icon, xOffset, yOffset);
+  }
+
   @Override
   public double getMouseX(Component component) {
     return mouseX - (component == null ? 0 : component.getX());

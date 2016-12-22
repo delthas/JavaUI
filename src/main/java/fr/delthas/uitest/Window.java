@@ -145,8 +145,14 @@ class Window implements Drawer {
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    window = glfwCreateWindow(width, height, "Context Preloading", NULL, NULL);
-    if (window == NULL) {
+    boolean supported;
+    try {
+      window = glfwCreateWindow(width, height, "Context Preloading", NULL, NULL);
+      supported = window != NULL;
+    } catch (Exception e) {
+      supported = false;
+    }
+    if (!supported) {
       // 4.3 not supported
       glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
       glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -157,9 +163,10 @@ class Window implements Drawer {
     glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
     window = glfwCreateWindow(width, height, title, fullscreen ? glfwGetPrimaryMonitor() : NULL, NULL);
 
-    GLFWImage iconImage = GLFWImage.create();
-    iconImage.set(icon.getWidth(), icon.getHeight(), icon.data);
-    glfwSetWindowIcon(window, GLFWImage.create(iconImage.sizeof()).put(iconImage).flip());
+    GLFWImage.Buffer iconImages = GLFWImage.malloc(1);
+    iconImages.get(0).set(icon.getWidth(), icon.getHeight(), icon.data);
+    glfwSetWindowIcon(window, iconImages);
+    iconImages.free();
     // maybe stbi free icon.data
 
     if (window == NULL) {
@@ -739,6 +746,14 @@ class Window implements Drawer {
 
   public void setClipboard(String clipboard) {
     glfwSetClipboardString(window, clipboard);
+  }
+
+  public void setCursor(Icon icon, int xOffset, int yOffset) {
+    GLFWImage iconImage = GLFWImage.malloc();
+    iconImage.set(icon.getWidth(), icon.getHeight(), icon.data);
+    long cursor = glfwCreateCursor(iconImage, xOffset, icon.getHeight() - 1 - yOffset);
+    glfwSetCursor(window, cursor);
+    iconImage.free();
   }
 
   private static class FontKey {

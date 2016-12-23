@@ -5,6 +5,13 @@
   <artifactId>uitest</artifactId>
   <version>1.0.1</version>
 
+  <distributionManagement>
+    <repository>
+      <id>sftp</id>
+      <url>sftp://delthas.fr//srv/http/maven/</url>
+    </repository>
+  </distributionManagement>
+
   <profiles>
     <profile>
       <id>lwjgl-natives-linux></id>
@@ -100,6 +107,13 @@
         </configuration>
       </plugin>
     </plugins>
+    <extensions>
+      <extension>
+        <groupId>org.apache.maven.wagon</groupId>
+        <artifactId>wagon-ssh</artifactId>
+        <version>2.10</version>
+      </extension>
+    </extensions>
   </build>
 
   <properties>

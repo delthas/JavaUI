@@ -7,6 +7,12 @@ public interface Drawer {
 
   void popTranslate();
 
+  default void drawLine(double x1, double y1, double x2, double y2) {
+    drawLineCenter((x1 + x2) / 2, (y1 + y2) / 2, Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)), Math.atan2(y2 - y1, x2 - x1));
+  }
+
+  void drawLineCenter(double x, double y, double length, double angle);
+
   default void fillCircle(double x, double y, double radius, boolean centered) {
     if (centered) {
       fillCircle(x, y, radius);

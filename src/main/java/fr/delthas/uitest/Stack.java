@@ -1,6 +1,7 @@
 package fr.delthas.uitest;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.ListIterator;
 
@@ -16,6 +17,13 @@ public class Stack {
       return null;
     }
     return layers.remove(layers.size() - 1);
+  }
+
+  public Layer top() {
+    if (layers.isEmpty()) {
+      return null;
+    }
+    return layers.get(layers.size() - 1);
   }
 
   protected void pushMouseMove(double x, double y) {
@@ -45,7 +53,7 @@ public class Stack {
     }
   }
 
-  protected void pushChar(double x, double y, int codepoint, int mods) {
+  protected void pushChar(double x, double y, int codepoint, EnumSet<KeyModifier> mods) {
     ListIterator<Layer> it = layers.listIterator(layers.size());
     while (it.hasPrevious()) {
       if (it.previous().pushChar(x, y, codepoint, mods)) {
@@ -55,11 +63,11 @@ public class Stack {
   }
 
   protected void render(InputState inputState, Drawer drawer) {
+    if (layers.isEmpty()) {
+      return;
+    }
     ListIterator<Layer> it = layers.listIterator(layers.size());
     while (it.hasPrevious() && !it.previous().isOpaque()) {
-    }
-    if (it.hasPrevious()) {
-      it.previous();
     }
     while (it.hasNext()) {
       it.next().render(inputState, drawer);

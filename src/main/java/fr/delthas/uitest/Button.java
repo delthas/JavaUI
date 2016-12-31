@@ -26,13 +26,13 @@ public class Button extends Component {
     drawer.fillRectangle(0, 0, getWidth(), getHeight(), false);
     drawer.setColor(Color.BLACK);
     drawer.fillRectangle(1, 1, getWidth() - 2, getHeight() - 2, false);
-    drawer.setColor(!isEnabled() ? Color.WHITE : down ? Color.WHITE : Color.LIGHT_GRAY);
+    drawer.setColor(!isEnabled() ? Color.GRAY : down ? Color.WHITE : Color.LIGHT_GRAY);
     drawer.drawText(getWidth() / 2, getHeight() / 2, text, Font.COMIC, 16, true, true);
   }
 
   @Override
   protected boolean pushMouseButton(double x, double y, int button, boolean down) {
-    if (button != 0) {
+    if (button != Ui.MOUSE_LEFT) {
       return false;
     }
     if (isEnabled() && down && isInBounds(x, y)) {

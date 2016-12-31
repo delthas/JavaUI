@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -98,7 +99,7 @@ class Window implements Drawer {
   }
 
   private static String readFile(String name) {
-    try (BufferedReader reader = new BufferedReader(new InputStreamReader(Window.class.getResourceAsStream("/" + name)))) {
+    try (BufferedReader reader = new BufferedReader(new InputStreamReader(Window.class.getResourceAsStream("/" + name), StandardCharsets.UTF_8.name()))) {
       StringBuilder file = new StringBuilder();
       String line;
       while ((line = reader.readLine()) != null) {
@@ -149,7 +150,8 @@ class Window implements Drawer {
     try {
       window = glfwCreateWindow(width, height, "Context Preloading", NULL, NULL);
       supported = window != NULL;
-    } catch (Exception e) {
+    } catch (RuntimeException ignore) {
+      // sometimes an exception can be thrown instead of returning NULL if the context version is unsupported
       supported = false;
     }
     if (!supported) {
@@ -194,7 +196,20 @@ class Window implements Drawer {
     glfwSetCharModsCallback(window, charCallback = new GLFWCharModsCallback() {
       @Override
       public void invoke(long window, int codepoint, int mods) {
-        Ui.getUi().pushChar(codepoint, mods);
+        EnumSet<KeyModifier> enumSet = EnumSet.noneOf(KeyModifier.class);
+        if ((mods & GLFW_MOD_CONTROL) != 0) {
+          enumSet.add(KeyModifier.CTRL);
+        }
+        if ((mods & GLFW_MOD_ALT) != 0) {
+          enumSet.add(KeyModifier.ALT);
+        }
+        if ((mods & GLFW_MOD_SHIFT) != 0) {
+          enumSet.add(KeyModifier.SHIFT);
+        }
+        if ((mods & GLFW_MOD_SUPER) != 0) {
+          enumSet.add(KeyModifier.SUPER);
+        }
+        Ui.getUi().pushChar(codepoint, enumSet);
       }
     });
 
@@ -208,10 +223,11 @@ class Window implements Drawer {
     glfwSetMouseButtonCallback(window, mouseButtonCallback = new GLFWMouseButtonCallback() {
       @Override
       public void invoke(long window, int button, int action, int mods) {
+        // button + 1 b/c we want to start at 1 (all mouse buttons in Mouse.java are offset by 1)
         if (action == GLFW_PRESS) {
-          Ui.getUi().pushMouseButton(button, true);
+          Ui.getUi().pushMouseButton(button + 1, true);
         } else if (action == GLFW_RELEASE) {
-          Ui.getUi().pushMouseButton(button, false);
+          Ui.getUi().pushMouseButton(button + 1, false);
         }
       }
     });
@@ -477,16 +493,16 @@ class Window implements Drawer {
   private FontData getFontData(Font font, float size) {
     return fontData.computeIfAbsent(new FontKey(font, size), key -> {
       ByteBuffer data = fontBuffer.get(font);
-      STBTTPackedchar.Buffer[] charData = {STBTTPackedchar.malloc(128 - 32), STBTTPackedchar.malloc(256 - 192)};
+      STBTTPackedchar.Buffer[] charData = {STBTTPackedchar.malloc(128 - 32), STBTTPackedchar.malloc(256 - 192), STBTTPackedchar.malloc(1)};
       ByteBuffer bitmap = BufferUtils.createByteBuffer(1024 * 1024);
       try (STBTTPackContext pc = STBTTPackContext.malloc()) {
         stbtt_PackBegin(pc, bitmap, 1024, 1024, 0, 1);
         stbtt_PackSetOversampling(pc, 3, 1);
-        STBTTPackRange.Buffer ranges = STBTTPackRange.malloc(2);
+        STBTTPackRange.Buffer ranges = STBTTPackRange.malloc(3);
         memSet(ranges.address(), 0, ranges.capacity() * STBTTPackRange.SIZEOF);
         ranges.get(0).font_size(size).first_unicode_codepoint_in_range(32).num_chars(128 - 32).chardata_for_range(charData[0]);
         ranges.get(1).font_size(size).first_unicode_codepoint_in_range(192).num_chars(256 - 192).chardata_for_range(charData[1]);
-
+        ranges.get(2).font_size(size).first_unicode_codepoint_in_range(8226).num_chars(1).chardata_for_range(charData[2]);
         stbtt_PackFontRanges(pc, data, 0, ranges);
         ranges.free();
         stbtt_PackEnd(pc);
@@ -566,7 +582,7 @@ class Window implements Drawer {
     glBindVertexArray(circleVao);
     glUniform4f(indexCircleCirle, (float) ((x + translateX) * 2 - 1), (float) ((y + translateY) * 2 - 1), (float) (radius * 2), (float) (radius * 2));
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    glUseProgram(0);
+
   }
 
   @Override
@@ -578,7 +594,17 @@ class Window implements Drawer {
     bufferMat4x4.clear();
     glUniformMatrix4fv(indexStdMatrix, false, mat4x4.get(bufferMat4x4));
     glDrawArrays(GL_TRIANGLES, 0, 6);
-    glUseProgram(0);
+  }
+
+  @Override
+  public void drawLineCenter(double x, double y, double length, double angle) {
+    glUseProgram(program);
+    glBindVertexArray(vao);
+    mat4x4.translation(-1, -1, 0).scale(2f / width, 2f / height, 1).translate((float) (x + translateX), (float) (y + translateY), 0)
+            .rotateZ((float) angle).scale((float) length, 1, 1);
+    bufferMat4x4.clear();
+    glUniformMatrix4fv(indexStdMatrix, false, mat4x4.get(bufferMat4x4));
+    glDrawArrays(GL_TRIANGLES, 0, 6);
   }
 
   @Override
@@ -593,7 +619,6 @@ class Window implements Drawer {
             .scale((float) (s2 - s1), (float) (t2 - t1), 1).translate(0.5f, 0.5f, 0.0f);
     glUniformMatrix4fv(indexTexTexPosition, false, mat4x4.get(bufferMat4x4));
     glDrawArrays(GL_TRIANGLES, 0, 6);
-    glUseProgram(0);
   }
 
   @Override
@@ -623,6 +648,9 @@ class Window implements Drawer {
         } else if (c < 256) {
           index = 1;
           position = c - 192;
+        } else if (c == 8226) {
+          index = 2;
+          position = 0;
         } else {
           continue;
         }
@@ -703,6 +731,9 @@ class Window implements Drawer {
         } else if (c < 256) {
           index = 1;
           position = c - 192;
+        } else if (c == 8226) {
+          index = 2;
+          position = 0;
         } else {
           continue;
         }
@@ -719,8 +750,6 @@ class Window implements Drawer {
         glUniform4f(indexFontImagePosition, q.s0(), q.t0(), q.s1(), q.t1());
         glDrawArrays(GL_TRIANGLES, 0, 6);
       }
-
-      glUseProgram(0);
 
       return (float) (xpos.get(0) - x);
     }
@@ -754,6 +783,14 @@ class Window implements Drawer {
     long cursor = glfwCreateCursor(iconImage, xOffset, icon.getHeight() - 1 - yOffset);
     glfwSetCursor(window, cursor);
     iconImage.free();
+  }
+
+  public int getCodepoint(int key) {
+    String string = glfwGetKeyName(key, 0);
+    if (string == null || string.codePointCount(0, string.length()) == 0) {
+      return 0;
+    }
+    return string.codePointAt(0);
   }
 
   private static class FontKey {

@@ -1,6 +1,7 @@
 package fr.delthas.uitest;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
 public class Layer {
@@ -50,7 +51,7 @@ public class Layer {
     return false;
   }
 
-  protected boolean pushChar(double x, double y, int codepoint, int mods) {
+  protected boolean pushChar(double x, double y, int codepoint, EnumSet<KeyModifier> mods) {
     for (Component component : components) {
       if (component.pushChar(x - component.getX(), y - component.getY(), codepoint, mods)) {
         return true;

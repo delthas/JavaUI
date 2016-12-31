@@ -1,9 +1,10 @@
 package fr.delthas.uitest;
 
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
 
-public final class Ui implements InputState {
+public final class Ui implements InputState, Key, Mouse {
   private static final Ui instance;
 
   static {
@@ -58,6 +59,10 @@ public final class Ui implements InputState {
     return stack.pop();
   }
 
+  public Layer top() {
+    return stack.top();
+  }
+
   void pushMouseMove(double x, double y) {
     mouseX = x;
     mouseY = y;
@@ -82,7 +87,7 @@ public final class Ui implements InputState {
     stack.pushKeyButton(mouseX, mouseY, key, down);
   }
 
-  void pushChar(int codepoint, int mods) {
+  void pushChar(int codepoint, EnumSet<KeyModifier> mods) {
     stack.pushChar(mouseX, mouseY, codepoint, mods);
   }
 
@@ -97,6 +102,10 @@ public final class Ui implements InputState {
 
   public void getFontMetrics(Font font, float size, float[] metrics) {
     window.getFontMetrics(font, size, metrics);
+  }
+
+  public int getCodepoint(int key) {
+    return window.getCodepoint(key);
   }
 
   public float getTextWidth(String text, Font font, float size) {

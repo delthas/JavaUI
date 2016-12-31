@@ -8,6 +8,7 @@ import java.util.Random;
 public final class UiTest {
   private static final Random random = new Random();
   private static boolean exitRequested = false;
+  private static long start;
 
   private UiTest() {}
 
@@ -27,7 +28,19 @@ public final class UiTest {
     layer.addComponent(Ui.getWidth() / 3, Ui.getHeight() / 2 - 500, Ui.getWidth() / 3, 50, field);
     CheckBox box = new CheckBox("pine");
     layer.addComponent(50, 800, 800, 40, box);
+    layer.addComponent(new Component() {
+      private double lastTime;
+      private double angle = 0;
+
+      @Override
+      protected void render(InputState inputState, Drawer drawer) {
+        angle += Math.random() * Math.pow((System.nanoTime() - lastTime) / 2000000000.0, 1);
+        lastTime = System.nanoTime();
+        drawer.drawLineCenter(getWidth() / 2, getHeight() / 2, 500, angle);
+      }
+    });
     layer.push();
+    start = System.nanoTime();
     while (!exitRequested) {
       Ui.getUi().input();
       Ui.getUi().render();

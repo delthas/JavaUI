@@ -1,19 +1,22 @@
 package fr.delthas.uitest;
 
-import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
+import java.util.EnumSet;
 import java.util.function.Predicate;
 
 public class TextField extends Component {
+  private String hintText = "";
   private String text = "";
+  private String drawnText = "";
   private float[] sizes = new float[8];
   private float[] metrics = new float[2];
-  private Predicate<String> listener;
+  private Predicate<String> predicate;
   private int caretPosition;
   private int selectionStart = 0;
   private int selectionEnd = 0;
   private boolean selecting = false;
+  private String hiddenCharacter;
 
   public TextField() {
 
@@ -21,6 +24,15 @@ public class TextField extends Component {
 
   public TextField(String text) {
     setText(text);
+  }
+
+  public void setHidden(String hiddenCharacter) {
+    this.hiddenCharacter = hiddenCharacter;
+    setText(text);
+  }
+
+  public void setHintText(String hintText) {
+    this.hintText = hintText;
   }
 
   @Override
@@ -33,7 +45,12 @@ public class TextField extends Component {
     drawer.fillRectangle(0, 0, getWidth(), getHeight(), false);
     drawer.setColor(Color.BLACK);
     drawer.fillRectangle(1, 1, getWidth() - 2, getHeight() - 2, false);
-    if (!text.isEmpty()) {
+    if (drawnText.isEmpty() && !isInBounds(inputState.getMouseX(), inputState.getMouseY())) {
+      drawer.setColor(Color.DARK_GRAY);
+      drawer.drawText(getWidth() / 2, getHeight() / 2, hintText, Font.COMIC, 16, true, true);
+      return;
+    }
+    if (!drawnText.isEmpty()) {
       if (selectionEnd != selectionStart) {
         int selection0;
         int selection1;
@@ -45,20 +62,20 @@ public class TextField extends Component {
           selection1 = selectionEnd;
         }
         drawer.setColor(Color.WHITE);
-        drawer.drawText(getWidth() / 2 - sizes[text.length() - 1] / 2, getHeight() / 2, text.substring(0, selection0), Font.COMIC, 16, false, true);
+        drawer.drawText(getWidth() / 2 - sizes[length(drawnText) - 1] / 2, getHeight() / 2, drawnText.substring(0, selection0), Font.COMIC, 16, false, true);
         drawer.setColor(Color.LIGHT_GRAY);
-        drawer.fillRectangle(getWidth() / 2 - sizes[text.length() - 1] / 2 + (selection0 == 0 ? 0 : sizes[selection0 - 1]), getHeight() / 2 + metrics[1] - (metrics[1] + metrics[0]) / 2, sizes[selection1 - 1] - (selection0 == 0 ? 0 : sizes[selection0 - 1]), metrics[0] - metrics[1], false);
+        drawer.fillRectangle(getWidth() / 2 - sizes[length(drawnText) - 1] / 2 + (selection0 == 0 ? 0 : sizes[selection0 - 1]), getHeight() / 2 + metrics[1] - (metrics[1] + metrics[0]) / 2, sizes[selection1 - 1] - (selection0 == 0 ? 0 : sizes[selection0 - 1]), metrics[0] - metrics[1], false);
         drawer.setColor(Color.BLACK);
-        drawer.drawText(getWidth() / 2 - sizes[text.length() - 1] / 2 + (selection0 == 0 ? 0 : sizes[selection0 - 1]), getHeight() / 2, text.substring(selection0, selection1), Font.COMIC, 16, false, true);
+        drawer.drawText(getWidth() / 2 - sizes[length(drawnText) - 1] / 2 + (selection0 == 0 ? 0 : sizes[selection0 - 1]), getHeight() / 2, drawnText.substring(selection0, selection1), Font.COMIC, 16, false, true);
         drawer.setColor(Color.WHITE);
-        drawer.drawText(getWidth() / 2 - sizes[text.length() - 1] / 2 + sizes[selection1 - 1], getHeight() / 2, text.substring(selection1), Font.COMIC, 16, false, true);
+        drawer.drawText(getWidth() / 2 - sizes[length(drawnText) - 1] / 2 + sizes[selection1 - 1], getHeight() / 2, drawnText.substring(selection1), Font.COMIC, 16, false, true);
       } else {
         drawer.setColor(Color.WHITE);
-        drawer.drawText(getWidth() / 2, getHeight() / 2, text, Font.COMIC, 16, true, true);
+        drawer.drawText(getWidth() / 2, getHeight() / 2, drawnText, Font.COMIC, 16, true, true);
       }
     }
     if (isInBounds(inputState.getMouseX(this), inputState.getMouseY(this))) {
-      float position = (float) (text.isEmpty() ? getWidth() / 2 : getWidth() / 2 - sizes[text.length() - 1] / 2 + (caretPosition == 0 ? 0 : sizes[caretPosition - 1]));
+      float position = (float) (drawnText.isEmpty() ? getWidth() / 2 : getWidth() / 2 - sizes[length(drawnText) - 1] / 2 + (caretPosition == 0 ? 0 : sizes[caretPosition - 1]));
       drawer.setColor(Color.GRAY);
       drawer.fillRectangle(position - 1, getHeight() / 2 + metrics[1] - (metrics[1] + metrics[0]) / 2, 1, metrics[0] - metrics[1], false);
     }
@@ -76,12 +93,12 @@ public class TextField extends Component {
       return false;
     }
     selecting = false;
-    selectionStart = selectionEnd = caretPosition = selection0 + string.length();
+    selectionStart = selectionEnd = caretPosition = selection0 + length(string);
     return true;
   }
 
   @Override
-  protected boolean pushChar(double x, double y, int codepoint, int mods) {
+  protected boolean pushChar(double x, double y, int codepoint, EnumSet<KeyModifier> mods) {
     if (!isInBounds(x, y)) {
       return false;
     }
@@ -103,15 +120,21 @@ public class TextField extends Component {
       selection0 = selectionEnd;
       selection1 = selectionStart;
     }
-    if (key == GLFW.GLFW_KEY_C && selectionStart != selectionEnd && (Ui.getUi().isKeyDown(GLFW.GLFW_KEY_LEFT_CONTROL) || Ui.getUi().isKeyDown(GLFW.GLFW_KEY_RIGHT_CONTROL))) {
+    if (key == Ui.KEY_C && selectionStart != selectionEnd && (Ui.getUi().isKeyDown(Ui.KEY_LEFT_CONTROL) || Ui.getUi().isKeyDown(Ui.KEY_RIGHT_CONTROL))) {
       Ui.getUi().setClipboard(getText().substring(selection0, selection1));
       return true;
     }
-    if (key == GLFW.GLFW_KEY_V && (Ui.getUi().isKeyDown(GLFW.GLFW_KEY_LEFT_CONTROL) || Ui.getUi().isKeyDown(GLFW.GLFW_KEY_RIGHT_CONTROL))) {
+    if (key == Ui.KEY_V && (Ui.getUi().isKeyDown(Ui.KEY_LEFT_CONTROL) || Ui.getUi().isKeyDown(Ui.KEY_RIGHT_CONTROL))) {
       insert(Ui.getUi().getClipboard());
       return true;
     }
-    if (key == GLFW.GLFW_KEY_BACKSPACE) {
+    if (Ui.getUi().getCodepoint(key) == 'A' && (Ui.getUi().isKeyDown(Ui.KEY_LEFT_CONTROL) || Ui.getUi().isKeyDown(Ui.KEY_RIGHT_CONTROL))) {
+      selectionStart = 0;
+      selectionEnd = length(drawnText);
+      selecting = false;
+      return true;
+    }
+    if (key == Ui.KEY_BACKSPACE) {
       if (selection0 == selection1 && caretPosition > 0) {
         setText(getText().substring(0, caretPosition - 1) + getText().substring(caretPosition));
         caretPosition--;
@@ -121,8 +144,8 @@ public class TextField extends Component {
         }
         caretPosition = selection0;
       }
-    } else if (key == GLFW.GLFW_KEY_DELETE) {
-      if (selection0 == selection1 && caretPosition < text.length()) {
+    } else if (key == Ui.KEY_DELETE) {
+      if (selection0 == selection1 && caretPosition < length(drawnText)) {
         setText(getText().substring(0, caretPosition) + getText().substring(caretPosition + 1));
       } else if (selection0 != selection1) {
         if (!insert("")) {
@@ -130,14 +153,14 @@ public class TextField extends Component {
         }
         caretPosition = selection0;
       }
-    } else if (key == GLFW.GLFW_KEY_LEFT && caretPosition > 0) {
+    } else if (key == Ui.KEY_LEFT && caretPosition > 0) {
       caretPosition--;
-    } else if (key == GLFW.GLFW_KEY_RIGHT && caretPosition < text.length()) {
+    } else if (key == Ui.KEY_RIGHT && caretPosition < length(drawnText)) {
       caretPosition++;
-    } else if (key == GLFW.GLFW_KEY_HOME) {
+    } else if (key == Ui.KEY_HOME) {
       caretPosition = 0;
-    } else if (key == GLFW.GLFW_KEY_END) {
-      caretPosition = text.length();
+    } else if (key == Ui.KEY_END) {
+      caretPosition = length(drawnText);
     } else {
       return false;
     }
@@ -148,7 +171,7 @@ public class TextField extends Component {
 
   @Override
   protected boolean pushMouseButton(double x, double y, int button, boolean down) {
-    if (button != 0) {
+    if (button != Ui.MOUSE_LEFT) {
       return false;
     }
     if (down && isInBounds(x, y)) {
@@ -180,37 +203,47 @@ public class TextField extends Component {
   }
 
   public boolean setText(String text) {
-    if (this.text.equals(text)) {
-      return true;
-    }
-    if (listener != null && !listener.test(text)) {
+    if (predicate != null && !predicate.test(text)) {
       return false;
     }
     this.text = text;
-    if (text.length() > sizes.length) {
-      sizes = new float[Integer.max(sizes.length * 2, text.length())];
+    drawnText = hiddenCharacter != null ? nTimes(length(text), hiddenCharacter) : text;
+    if (length(drawnText) > sizes.length) {
+      sizes = new float[Integer.max(sizes.length * 2, length(text))];
     }
-    Ui.getUi().getTextWidth(text, Font.COMIC, 16, sizes);
+    Ui.getUi().getTextWidth(drawnText, Font.COMIC, 16, sizes);
     Ui.getUi().getFontMetrics(Font.COMIC, 16, metrics);
     return true;
   }
 
-  public void setListener(Predicate<String> listener) {
-    this.listener = listener;
+  public void setPredicate(Predicate<String> predicate) {
+    this.predicate = predicate;
   }
 
   private int getCaretPositionFor(double x) {
-    if (text.isEmpty()) {
+    if (drawnText.isEmpty()) {
       return 0;
     }
-    if (x < sizes[0] / 2 + getWidth() / 2 - sizes[text.length() - 1] / 2) {
+    if (x < sizes[0] / 2 + getWidth() / 2 - sizes[length(drawnText) - 1] / 2) {
       return 0;
     }
-    for (int i = 1; i < text.length(); i++) {
-      if (x < (sizes[i] + sizes[i - 1]) / 2 + getWidth() / 2 - sizes[text.length() - 1] / 2) {
+    for (int i = 1; i < length(drawnText); i++) {
+      if (x < (sizes[i] + sizes[i - 1]) / 2 + getWidth() / 2 - sizes[length(drawnText) - 1] / 2) {
         return i;
       }
     }
-    return text.length();
+    return length(drawnText);
+  }
+
+  private String nTimes(int n, String string) {
+    StringBuilder sb = new StringBuilder(string.length() * n);
+    for (int i = 0; i < n; i++) {
+      sb.append(string);
+    }
+    return sb.toString();
+  }
+
+  private int length(String string) {
+    return string.codePointCount(0, string.length());
   }
 }

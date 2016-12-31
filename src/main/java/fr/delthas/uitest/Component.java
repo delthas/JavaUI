@@ -1,5 +1,7 @@
 package fr.delthas.uitest;
 
+import java.util.EnumSet;
+
 public class Component {
   private Layer layer;
   private double x;
@@ -37,7 +39,7 @@ public class Component {
   }
 
   @SuppressWarnings("SameReturnValue")
-  protected boolean pushChar(double x, double y, int codepoint, int mods) {
+  protected boolean pushChar(double x, double y, int codepoint, EnumSet<KeyModifier> mods) {
     return false;
   }
 

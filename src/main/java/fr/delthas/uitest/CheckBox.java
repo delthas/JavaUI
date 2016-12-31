@@ -42,7 +42,7 @@ public class CheckBox extends Component {
 
   @Override
   protected boolean pushMouseButton(double x, double y, int button, boolean down) {
-    if (button != 0) {
+    if (button != Ui.MOUSE_LEFT) {
       return false;
     }
     if (down && isInBounds(x, y)) {

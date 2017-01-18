@@ -46,7 +46,7 @@ class Window implements Drawer {
   private long window;
   private int vao, circleVao, texVao, fontVao, program, circleProgram, texProgram, fontProgram;
   private int bufferRectangle;
-  private int indexCircleCirle, indexCircleColor;
+  private int indexCircleCircle, indexCircleColor;
   private int indexFontFontPosition, indexFontImagePosition, indexFontColor;
   private int indexStdMatrix, indexStdColor;
   private int indexTexScreenPosition, indexTexTexPosition;
@@ -164,12 +164,14 @@ class Window implements Drawer {
     }
     glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
     window = glfwCreateWindow(width, height, title, fullscreen ? glfwGetPrimaryMonitor() : NULL, NULL);
-
-    GLFWImage.Buffer iconImages = GLFWImage.malloc(1);
-    iconImages.get(0).set(icon.getWidth(), icon.getHeight(), icon.data);
-    glfwSetWindowIcon(window, iconImages);
-    iconImages.free();
-    // maybe stbi free icon.data
+  
+    if (icon != null) {
+      GLFWImage.Buffer iconImages = GLFWImage.malloc(1);
+      iconImages.get(0).set(icon.getWidth(), icon.getHeight(), icon.data);
+      glfwSetWindowIcon(window, iconImages);
+      iconImages.free();
+      // maybe stbi free icon.data
+    }
 
     if (window == NULL) {
       throw new RuntimeException("Failed to create the GLFW window. Update your graphics card drivers.");
@@ -444,8 +446,8 @@ class Window implements Drawer {
     glDeleteShader(vertShader);
     glDeleteShader(fragShader);
     glUseProgram(program);
-
-    indexCircleCirle = glGetUniformLocation(circleProgram, "circle");
+  
+    indexCircleCircle = glGetUniformLocation(circleProgram, "circle");
     indexCircleColor = glGetUniformLocation(circleProgram, "color");
     indexFontFontPosition = glGetUniformLocation(fontProgram, "fontPosition");
     indexFontImagePosition = glGetUniformLocation(fontProgram, "imagePosition");
@@ -580,9 +582,8 @@ class Window implements Drawer {
   public void fillCircle(double x, double y, double radius) {
     glUseProgram(circleProgram);
     glBindVertexArray(circleVao);
-    glUniform4f(indexCircleCirle, (float) ((x + translateX) * 2 - 1), (float) ((y + translateY) * 2 - 1), (float) (radius * 2), (float) (radius * 2));
+    glUniform4f(indexCircleCircle, (float) ((x + translateX) * 2 / width - 1), (float) ((y + translateY) * 2 / height - 1), (float) (radius * 2 / width), (float) (radius * 2 / height));
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
   }
 
   @Override

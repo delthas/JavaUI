@@ -31,7 +31,11 @@ public final class Ui implements InputState, Key, Mouse {
   public static Ui getUi() {
     return instance;
   }
-
+  
+  public void create(String title) {
+    window.create(title, null, true);
+  }
+  
   public void create(String title, Icon icon) {
     window.create(title, icon, true);
   }

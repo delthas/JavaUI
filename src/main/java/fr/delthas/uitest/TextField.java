@@ -1,6 +1,5 @@
 package fr.delthas.uitest;
 
-
 import java.awt.*;
 import java.util.EnumSet;
 import java.util.function.Predicate;
@@ -17,24 +16,24 @@ public class TextField extends Component {
   private int selectionEnd = 0;
   private boolean selecting = false;
   private String hiddenCharacter;
-
+  
   public TextField() {
-
+  
   }
-
+  
   public TextField(String text) {
     setText(text);
   }
-
+  
   public void setHidden(String hiddenCharacter) {
     this.hiddenCharacter = hiddenCharacter;
     setText(text);
   }
-
+  
   public void setHintText(String hintText) {
     this.hintText = hintText;
   }
-
+  
   @Override
   protected void render(InputState inputState, Drawer drawer) {
     if (isInBounds(inputState.getMouseX(this), inputState.getMouseY(this))) {
@@ -80,7 +79,7 @@ public class TextField extends Component {
       drawer.fillRectangle(position - 1, getHeight() / 2 + metrics[1] - (metrics[1] + metrics[0]) / 2, 1, metrics[0] - metrics[1], false);
     }
   }
-
+  
   private boolean insert(String string) {
     int selection0 = selectionStart;
     int selection1 = selectionEnd;
@@ -96,18 +95,18 @@ public class TextField extends Component {
     selectionStart = selectionEnd = caretPosition = selection0 + length(string);
     return true;
   }
-
+  
   @Override
-  protected boolean pushChar(double x, double y, int codepoint, EnumSet<KeyModifier> mods) {
+  protected boolean pushChar(double x, double y, int codepoint, EnumSet<KeyModifier> mods, long time) {
     if (!isInBounds(x, y)) {
       return false;
     }
     insert(new String(new int[]{codepoint}, 0, 1));
     return true;
   }
-
+  
   @Override
-  protected boolean pushKeyButton(double x, double y, int key, boolean down) {
+  protected boolean pushKeyButton(double x, double y, int key, boolean down, long time) {
     if (!down) {
       return false;
     }
@@ -168,9 +167,9 @@ public class TextField extends Component {
     selectionStart = selectionEnd = caretPosition;
     return true;
   }
-
+  
   @Override
-  protected boolean pushMouseButton(double x, double y, int button, boolean down) {
+  protected boolean pushMouseButton(double x, double y, int button, boolean down, long time) {
     if (button != Ui.MOUSE_LEFT) {
       return false;
     }
@@ -187,9 +186,9 @@ public class TextField extends Component {
     }
     return false;
   }
-
+  
   @Override
-  protected boolean pushMouseMove(double x, double y) {
+  protected boolean pushMouseMove(double x, double y, long time) {
     if (!selecting) {
       return false;
     }
@@ -197,11 +196,11 @@ public class TextField extends Component {
     selectionEnd = caretPosition;
     return false;
   }
-
+  
   public String getText() {
     return text;
   }
-
+  
   public boolean setText(String text) {
     if (predicate != null && !predicate.test(text)) {
       return false;
@@ -215,11 +214,11 @@ public class TextField extends Component {
     Ui.getUi().getFontMetrics(Font.COMIC, 16, metrics);
     return true;
   }
-
+  
   public void setPredicate(Predicate<String> predicate) {
     this.predicate = predicate;
   }
-
+  
   private int getCaretPositionFor(double x) {
     if (drawnText.isEmpty()) {
       return 0;
@@ -234,7 +233,7 @@ public class TextField extends Component {
     }
     return length(drawnText);
   }
-
+  
   private String nTimes(int n, String string) {
     StringBuilder sb = new StringBuilder(string.length() * n);
     for (int i = 0; i < n; i++) {
@@ -242,7 +241,7 @@ public class TextField extends Component {
     }
     return sb.toString();
   }
-
+  
   private int length(String string) {
     return string.codePointCount(0, string.length());
   }

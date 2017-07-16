@@ -7,15 +7,15 @@ public class Button extends Component {
   private String text = "";
   private boolean down = false;
   private BiConsumer<Double, Double> listener;
-
+  
   public Button() {
-
+  
   }
-
+  
   public Button(String text) {
     setText(text);
   }
-
+  
   @Override
   protected void render(InputState inputState, Drawer drawer) {
     if (isEnabled() && isInBounds(inputState.getMouseX(this), inputState.getMouseY(this))) {
@@ -29,9 +29,9 @@ public class Button extends Component {
     drawer.setColor(!isEnabled() ? Color.GRAY : down ? Color.WHITE : Color.LIGHT_GRAY);
     drawer.drawText(getWidth() / 2, getHeight() / 2, text, Font.COMIC, 16, true, true);
   }
-
+  
   @Override
-  protected boolean pushMouseButton(double x, double y, int button, boolean down) {
+  protected boolean pushMouseButton(double x, double y, int button, boolean down, long time) {
     if (button != Ui.MOUSE_LEFT) {
       return false;
     }
@@ -49,15 +49,15 @@ public class Button extends Component {
     }
     return false;
   }
-
+  
   public String getText() {
     return text;
   }
-
+  
   public void setText(String text) {
     this.text = text;
   }
-
+  
   public void setListener(BiConsumer<Double, Double> listener) {
     this.listener = listener;
   }

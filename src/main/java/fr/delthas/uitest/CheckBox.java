@@ -8,15 +8,15 @@ public class CheckBox extends Component {
   private boolean down = false;
   private boolean checked = false;
   private BiConsumer<Double, Double> listener;
-
+  
   public CheckBox() {
-
+  
   }
-
+  
   public CheckBox(String text) {
     setText(text);
   }
-
+  
   @Override
   protected void render(InputState inputState, Drawer drawer) {
     if (isInBounds(inputState.getMouseX(this), inputState.getMouseY(this))) {
@@ -39,9 +39,9 @@ public class CheckBox extends Component {
     drawer.setColor(down ? Color.WHITE : Color.LIGHT_GRAY);
     drawer.drawText((getWidth() - unit) / 2, getHeight() / 2, text, Font.COMIC, 16, true, true);
   }
-
+  
   @Override
-  protected boolean pushMouseButton(double x, double y, int button, boolean down) {
+  protected boolean pushMouseButton(double x, double y, int button, boolean down, long time) {
     if (button != Ui.MOUSE_LEFT) {
       return false;
     }
@@ -60,23 +60,23 @@ public class CheckBox extends Component {
     }
     return false;
   }
-
+  
   public String getText() {
     return text;
   }
-
+  
   public void setText(String text) {
     this.text = text;
   }
-
+  
   public boolean isChecked() {
     return checked;
   }
-
+  
   public void setChecked(boolean checked) {
     this.checked = checked;
   }
-
+  
   public void setListener(BiConsumer<Double, Double> listener) {
     this.listener = listener;
   }

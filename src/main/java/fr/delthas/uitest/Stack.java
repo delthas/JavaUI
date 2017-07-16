@@ -7,61 +7,71 @@ import java.util.ListIterator;
 
 public class Stack {
   protected List<Layer> layers = new ArrayList<>();
-
+  
   public void push(Layer layer) {
+    layer.reset();
     layers.add(layer);
   }
-
+  
   public Layer pop() {
     if (layers.isEmpty()) {
       return null;
     }
     return layers.remove(layers.size() - 1);
   }
-
+  
   public Layer top() {
     if (layers.isEmpty()) {
       return null;
     }
     return layers.get(layers.size() - 1);
   }
-
-  protected void pushMouseMove(double x, double y) {
+  
+  protected void pushMouseMove(double x, double y, long time) {
     ListIterator<Layer> it = layers.listIterator(layers.size());
     while (it.hasPrevious()) {
-      if (it.previous().pushMouseMove(x, y)) {
+      if (it.previous().pushMouseMove(x, y, time)) {
         return;
       }
     }
   }
-
-  protected void pushMouseButton(double x, double y, int button, boolean down) {
+  
+  protected void pushMouseButton(double x, double y, int button, boolean down, long time) {
     ListIterator<Layer> it = layers.listIterator(layers.size());
     while (it.hasPrevious()) {
-      if (it.previous().pushMouseButton(x, y, button, down)) {
+      if (it.previous().pushMouseButton(x, y, button, down, time)) {
         return;
       }
     }
   }
-
-  protected void pushKeyButton(double x, double y, int key, boolean down) {
+  
+  protected void pushMouseScroll(double x, double y, int scroll, long time) {
     ListIterator<Layer> it = layers.listIterator(layers.size());
     while (it.hasPrevious()) {
-      if (it.previous().pushKeyButton(x, y, key, down)) {
+      if (it.previous().pushMouseScroll(x, y, scroll, time)) {
         return;
       }
     }
   }
-
-  protected void pushChar(double x, double y, int codepoint, EnumSet<KeyModifier> mods) {
+  
+  protected void pushKeyButton(double x, double y, int key, boolean down, long time) {
     ListIterator<Layer> it = layers.listIterator(layers.size());
     while (it.hasPrevious()) {
-      if (it.previous().pushChar(x, y, codepoint, mods)) {
+      if (it.previous().pushKeyButton(x, y, key, down, time)) {
         return;
       }
     }
   }
-
+  
+  protected void pushChar(double x, double y, int codepoint, EnumSet<KeyModifier> mods, long time) {
+    ListIterator<Layer> it = layers.listIterator(layers.size());
+    while (it.hasPrevious()) {
+      if (it.previous().pushChar(x, y, codepoint, mods, time)) {
+        return;
+      }
+    }
+  }
+  
   protected void render(InputState inputState, Drawer drawer) {
     if (layers.isEmpty()) {
       return;

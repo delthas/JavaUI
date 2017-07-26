@@ -11,13 +11,24 @@ import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static org.lwjgl.openal.AL10.*;
 import static org.lwjgl.openal.ALC10.*;
 import static org.lwjgl.stb.STBVorbis.*;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
-public class SoundManager {
+/**
+ * SoundManager is the singleton that represents the sound system, that is the system that lets play sounds.
+ * <p>
+ * <b>Before use, the sound manager MUST be explicitly created with {@link #create()}. After use, that is when no more sounds are to be played, it MUST be explicitly destroyed with {@link #destroy()}.</b>
+ * <p>
+ * To use, first create the sound manager with {@link #create()}, then create and play back multiple sounds with the various {@code Sound.createSound} static functions, and the {@link #playSound(Sound)} method, then destroy it with {@link #destroy()}.
+ *
+ * @see Sound
+ * @see #playSound(Sound)
+ */
+public final class SoundManager {
   private static final SoundManager instance;
   
   static {
@@ -29,7 +40,11 @@ public class SoundManager {
   private int[] sources;
   private int sourceId = -1;
   private boolean enabled = true;
+  private boolean created = false;
   
+  /**
+   * @return The singleton SoundManager instance on which all sound manager calls are to be made.
+   */
   public static SoundManager getSoundManager() {
     return instance;
   }
@@ -69,7 +84,13 @@ public class SoundManager {
     }
   }
   
+  /**
+   * Plays the specified sound immediately and fully, returning immediately (this method is <b>NOT</b> blocking).
+   *
+   * @param sound The sound to be played, must be non-null.
+   */
   public void playSound(Sound sound) {
+    Objects.requireNonNull(sound);
     if (!enabled) {
       return;
     }
@@ -109,12 +130,19 @@ public class SoundManager {
     checkALError();
   }
   
+  /**
+   * Creates and initializes the {@link SoundManager}. <b>To be called before any other method, (except {@link #getSoundManager()}).</b>
+   */
   public void create() {
+    if (created) {
+      return;
+    }
     long device = alcOpenDevice((ByteBuffer) null);
     if (device == NULL) {
       enabled = false;
       return;
     }
+    created = true;
     ALCCapabilities deviceCaps = ALC.createCapabilities(device);
     long context = alcCreateContext(device, (IntBuffer) null);
     alcMakeContextCurrent(context);
@@ -138,7 +166,13 @@ public class SoundManager {
     checkALError();
   }
   
+  /**
+   * Destroys and frees up all the memory used by the {@link SoundManager} singleton. <b>This method MUST be explicitly called when no more sounds are to be played, before garbage collection.</b>
+   */
   public void destroy() {
+    if (!created) {
+      return;
+    }
     if (!enabled) {
       return;
     }
@@ -154,5 +188,6 @@ public class SoundManager {
     alcMakeContextCurrent(NULL);
     alcDestroyContext(context);
     alcCloseDevice(device);
+    created = false;
   }
 }

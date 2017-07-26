@@ -1,19 +1,33 @@
 package fr.delthas.javaui;
 
 import java.awt.*;
-import java.util.function.BiConsumer;
+import java.util.Objects;
 
-public class Button extends Component {
+/**
+ * Button is a component class of the UI, that displays a single line of text and reacts to left mouse button clicks.
+ * <p>
+ * To use, specify a {@link Button.Listener} with {@link #setListener(Listener)}, that will be called when the button is enabled and is clicked with the left mouse button.
+ *
+ * @see Listener
+ */
+public final class Button extends Component {
   private String text = "";
   private boolean down = false;
-  private BiConsumer<Double, Double> listener;
-  
+  private Listener listener;
+  /**
+   * Creates a button (enabled), with an empty text.
+   */
   public Button() {
   
   }
   
+  /**
+   * Creates a button (enabled), with the specified text.
+   *
+   * @param text The text of the button, to be set, cannot be null (use the empty string ("") instead if needed).
+   */
   public Button(String text) {
-    setText(text);
+    setText(Objects.requireNonNull(text));
   }
   
   @Override
@@ -39,7 +53,7 @@ public class Button extends Component {
       if (!this.down) {
         this.down = true;
         if (listener != null) {
-          listener.accept(x, y);
+          listener.buttonPressed(this, x, y);
         }
       }
       return true;
@@ -50,15 +64,45 @@ public class Button extends Component {
     return false;
   }
   
+  /**
+   * @return The text of the button. No/empty text is returned as the empty string (""), not null.
+   */
   public String getText() {
     return text;
   }
   
+  /**
+   * Sets the text of this button.
+   *
+   * @param text The text to be set, cannot be null (use the empty string ("") instead if needed).
+   */
   public void setText(String text) {
-    this.text = text;
+    this.text = Objects.requireNonNull(text);
   }
   
-  public void setListener(BiConsumer<Double, Double> listener) {
+  /**
+   * Sets the listener of this button. To remove the listener, pass null.
+   *
+   * @param listener The listener to be set, to listen for button press events, or null to remove the listener.
+   * @see Listener
+   */
+  public void setListener(Listener listener) {
     this.listener = listener;
+  }
+  
+  /**
+   * Listener is a listener to a button, that will be called when the button is enabled and pressed, to be set with {@link Button#setListener(Listener)}.
+   */
+  @SuppressWarnings("InterfaceNeverImplemented")
+  @FunctionalInterface
+  public interface Listener {
+    /**
+     * Called when a button on which the listener has been set, is enabled and pressed.
+     *
+     * @param button The button which originated the event.
+     * @param x      The x position of the mouse relative to the button, when it pressed the button.
+     * @param y      The y position of the mouse relative to the button, when it pressed the button.
+     */
+    void buttonPressed(Button button, double x, double y);
   }
 }

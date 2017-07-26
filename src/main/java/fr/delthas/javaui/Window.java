@@ -38,7 +38,7 @@ import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.system.MemoryUtil.*;
 
 @SuppressWarnings({"resource", "unused"})
-class Window implements Drawer {
+final class Window implements Drawer {
   private static int width, height;
   long time = 0;
   private boolean compatibility;
@@ -688,7 +688,7 @@ class Window implements Drawer {
   }
   
   @Override
-  public void fillCircle(double x, double y, double radius, double width) {
+  public void fillRing(double x, double y, double radius, double width) {
     glUseProgram(circleProgram);
     glBindVertexArray(circleVao);
     glUniform1f(indexCircleMinLength, width <= 0 ? 0 : (float) ((1 - width / radius) * (1 - width / radius)));
@@ -719,6 +719,7 @@ class Window implements Drawer {
   
   @Override
   public void drawImage(double x, double y, double width, double height, double s1, double t1, double s2, double t2, Texture texture, double angle) {
+    Objects.requireNonNull(texture);
     if ((texture instanceof SimpleTexture && ((SimpleTexture) texture).destroyed) || (texture instanceof AtlasTexture && (((AtlasTexture) texture).destroyed || ((AtlasTexture) texture).atlas.destroyed))) {
       throw new RuntimeException("Tried to draw destroyed texture!");
     }
@@ -739,7 +740,10 @@ class Window implements Drawer {
   }
   
   @Override
-  public float getTextWidth(String text, Font font, float size, float[] sizes) {
+  public float[] getTextPositions(String text, Font font, float size) {
+    Objects.requireNonNull(text);
+    Objects.requireNonNull(font);
+    float[] sizes = new float[text.length() + 1];
     try (MemoryStack stack = stackPush()) {
       FloatBuffer xpos = stack.floats(0);
       FloatBuffer ypos = stack.floats(0);
@@ -749,9 +753,7 @@ class Window implements Drawer {
       FontData fontData = getFontData(font, size);
       
       for (int i = 0; i < text.length(); i++) {
-        if (sizes != null && sizes.length >= i + 1) {
-          sizes[i] = xpos.get(0);
-        }
+        sizes[i] = xpos.get(0);
         int c = text.codePointAt(i);
         int index;
         int position;
@@ -772,16 +774,21 @@ class Window implements Drawer {
           continue;
         }
         stbtt_GetPackedQuad(fontData.charData[index], 1024, 1024, position, xpos, ypos, q, false);
-        if (sizes != null && sizes.length >= i + 1) {
-          sizes[i] = xpos.get(0);
-        }
       }
-      return xpos.get(0);
+      sizes[text.length()] = xpos.get(0);
     }
+    return sizes;
   }
   
   @Override
-  public void getFontMetrics(Font font, float size, float[] metrics) {
+  public FontMetrics getFontMetrics(Font font, float size) {
+    Objects.requireNonNull(font);
+    float[] floats = new float[3];
+    getFontMetrics(font, size, floats);
+    return new FontMetrics(floats[0], floats[1], floats[2]);
+  }
+  
+  private void getFontMetrics(Font font, float size, float[] metrics) {
     if (metrics == null || metrics.length == 0) {
       return;
     }
@@ -801,7 +808,10 @@ class Window implements Drawer {
   }
   
   @Override
-  public float drawText(double x, double y, String text, Font font, float size, boolean xCentered, boolean yCentered, float[] sizes) {
+  public float[] drawTextPositions(double x, double y, String text, Font font, float size, boolean xCentered, boolean yCentered) {
+    Objects.requireNonNull(text);
+    Objects.requireNonNull(font);
+    float[] sizes = new float[text.length() + 1];
     try (MemoryStack stack = stackPush()) {
       FloatBuffer xpos = stack.floats((float) x);
       FloatBuffer ypos = stack.floats((float) (getHeight() - y));
@@ -832,9 +842,7 @@ class Window implements Drawer {
       
       int codepointCount = text.codePointCount(0, text.length());
       for (int i = 0; i < codepointCount; i++) {
-        if (sizes != null && sizes.length >= i + 1) {
-          sizes[i] = (float) (xpos.get(0) - x);
-        }
+        sizes[i] = (float) (xpos.get(0) - x);
         int c = text.codePointAt(i);
         int index;
         int position;
@@ -856,10 +864,6 @@ class Window implements Drawer {
         }
         stbtt_GetPackedQuad(fontData.charData[index], 1024, 1024, position, xpos, ypos, q, false);
         
-        if (sizes != null && sizes.length >= i + 1) {
-          sizes[i] = (float) (xpos.get(0) - x);
-        }
-        
         glUniform4f(indexFontFontPosition, (float) ((translateX + q.x0() - xOffset) * 2 / width) - 1,
                 (float) ((translateY + getHeight() - q.y0() - yOffset) * 2 / height) - 1,
                 (float) ((translateX + q.x1() - xOffset) * 2 / width) - 1,
@@ -867,13 +871,14 @@ class Window implements Drawer {
         glUniform4f(indexFontImagePosition, q.s0(), q.t0(), q.s1(), q.t1());
         glDrawArrays(GL_TRIANGLES, 0, 6);
       }
-      
-      return (float) (xpos.get(0) - x);
+      sizes[text.length()] = (float) (xpos.get(0) - x);
     }
+    return sizes;
   }
   
   @Override
   public void setColor(Color color) {
+    Objects.requireNonNull(color);
     glUseProgram(program);
     glUniform3f(indexStdColor, color.getRed() / 256f, color.getGreen() / 256f, color.getBlue() / 256f);
     glUseProgram(circleProgram);
@@ -908,7 +913,7 @@ class Window implements Drawer {
           continue;
         }
         if (input instanceof ModsInput) {
-          Ui.getUi().pushChar(((ModsInput) input).codepoint, ((ModsInput) input).mods, ((ModsInput) input).time);
+          Ui.getUi().pushChar(new String(new int[]{((ModsInput) input).codepoint}, 0, 1), ((ModsInput) input).mods, ((ModsInput) input).time);
           continue;
         }
       }
@@ -935,15 +940,15 @@ class Window implements Drawer {
     iconImage.free();
   }
   
-  public int getCodepoint(int key) {
+  public String getKeyname(int key) {
     String string = glfwGetKeyName(key, 0);
-    if (string == null || string.codePointCount(0, string.length()) == 0) {
-      return 0;
+    if (string == null) {
+      return "";
     }
-    return string.codePointAt(0);
+    return string;
   }
   
-  private static class CreateRequest {
+  private static final class CreateRequest {
     public final String title;
     public final Image image;
     public final boolean fullscreen;
@@ -955,13 +960,13 @@ class Window implements Drawer {
     }
   }
   
-  private static class DestroyRequest {
+  private static final class DestroyRequest {
   }
   
-  private static class InputRequest {
+  private static final class InputRequest {
   }
   
-  private static class ScrollInput {
+  private static final class ScrollInput {
     public final long time;
     public final int scroll;
     
@@ -971,7 +976,7 @@ class Window implements Drawer {
     }
   }
   
-  private static class KeyInput {
+  private static final class KeyInput {
     public final long time;
     public final int key;
     public final boolean down;
@@ -983,7 +988,7 @@ class Window implements Drawer {
     }
   }
   
-  private static class MouseInput {
+  private static final class MouseInput {
     public final long time;
     public final int button;
     public final boolean down;
@@ -995,7 +1000,7 @@ class Window implements Drawer {
     }
   }
   
-  private static class MoveInput {
+  private static final class MoveInput {
     public final long time;
     public final double x;
     public final double y;
@@ -1007,7 +1012,7 @@ class Window implements Drawer {
     }
   }
   
-  private static class ModsInput {
+  private static final class ModsInput {
     public final long time;
     public final int codepoint;
     public final EnumSet<KeyModifier> mods;
@@ -1019,7 +1024,7 @@ class Window implements Drawer {
     }
   }
   
-  private static class FontKey {
+  private static final class FontKey {
     final Font font;
     final float size;
     
@@ -1047,7 +1052,7 @@ class Window implements Drawer {
     }
   }
   
-  private static class FontData {
+  private static final class FontData {
     final int texture;
     final STBTTPackedchar.Buffer[] charData;
     final STBTTFontinfo info;

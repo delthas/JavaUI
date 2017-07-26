@@ -5,11 +5,11 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.ListIterator;
 
-public class Stack {
+@SuppressWarnings("ProtectedMemberInFinalClass")
+final class Stack {
   protected List<Layer> layers = new ArrayList<>();
   
   public void push(Layer layer) {
-    layer.reset();
     layers.add(layer);
   }
   
@@ -46,6 +46,7 @@ public class Stack {
   }
   
   protected void pushMouseScroll(double x, double y, int scroll, long time) {
+    System.out.println(scroll);
     ListIterator<Layer> it = layers.listIterator(layers.size());
     while (it.hasPrevious()) {
       if (it.previous().pushMouseScroll(x, y, scroll, time)) {
@@ -63,10 +64,10 @@ public class Stack {
     }
   }
   
-  protected void pushChar(double x, double y, int codepoint, EnumSet<KeyModifier> mods, long time) {
+  protected void pushChar(double x, double y, String input, EnumSet<KeyModifier> mods, long time) {
     ListIterator<Layer> it = layers.listIterator(layers.size());
     while (it.hasPrevious()) {
-      if (it.previous().pushChar(x, y, codepoint, mods, time)) {
+      if (it.previous().pushChar(x, y, input, mods, time)) {
         return;
       }
     }

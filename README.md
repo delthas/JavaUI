@@ -28,7 +28,7 @@ JavaUI requires Java >= 8 to run. You can get this library using Maven by adding
 
 This library includes a three-part API (low-level drawing, UI support, sound support), that is lightweight but quite powerful, and you may find quite useful to study [the documentation](#documentation).
 
-Here's a quick example on how to show a button and say hi to the console when it gets clicked, copied from the extensive library [Javadoc](https://ui.delthas.fr/).
+Here's a quick example on how to show a button and say hi to the console when it gets clicked, copied from the extensive library [Javadoc](http://www.javadoc.io/doc/fr.delthas/javaui/).
 
 ```java
 private void main() {
@@ -66,7 +66,7 @@ private void destroy() {
 
 The library javadoc is especially detailed and extensive, and you may refer to the package Javadoc and each class Javadoc for some high-level context and use cases to help you use the library.
 
-The javadoc for the API is located at: https://ui.delthas.fr/
+The javadoc for the API is located at: http://www.javadoc.io/doc/fr.delthas/javaui/
 
 Some methods of the API can be called from multiple threads, but the Javadoc regarding multithreading is to be added in the near future (see [status](#status) below).
 

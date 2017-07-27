@@ -418,8 +418,6 @@ final class Window implements Drawer {
       }, 0L);
     }
     
-    System.out.println(glGetInteger(GL_MAX_TEXTURE_SIZE));
-    
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     

@@ -46,7 +46,6 @@ final class Stack {
   }
   
   protected void pushMouseScroll(double x, double y, int scroll, long time) {
-    System.out.println(scroll);
     ListIterator<Layer> it = layers.listIterator(layers.size());
     while (it.hasPrevious()) {
       if (it.previous().pushMouseScroll(x, y, scroll, time)) {

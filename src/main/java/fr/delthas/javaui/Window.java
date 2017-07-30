@@ -278,7 +278,7 @@ final class Window implements Drawer {
     glfwSetScrollCallback(window, scrollCallback = new GLFWScrollCallback() {
       @Override
       public void invoke(long window, double xoffset, double yoffset) {
-        inputs.add(new ScrollInput(System.nanoTime(), -(int) yoffset));
+        inputs.add(new ScrollInput(System.nanoTime(), (int) yoffset));
       }
     });
     

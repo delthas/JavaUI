@@ -73,9 +73,10 @@ public final class SoundManager {
         throw new RuntimeException("Failed reading ogg file. The file should have exactly one or two audio channels.");
       }
       int lengthSamples = stb_vorbis_stream_length_in_samples(decoder);
-      ShortBuffer pcm = BufferUtils.createShortBuffer(lengthSamples);
+      ShortBuffer pcm = BufferUtils.createShortBuffer(lengthSamples * info.channels());
       stb_vorbis_get_samples_short_interleaved(decoder, info.channels(), pcm);
       stb_vorbis_close(decoder);
+      checkALError();
       alBufferData(data, info.channels() == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, pcm, info.sample_rate());
       checkALError();
       Sound sound = new Sound(data);

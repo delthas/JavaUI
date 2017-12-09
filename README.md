@@ -18,7 +18,7 @@ JavaUI requires Java >= 8 to run. You can get this library using Maven by adding
     <dependency>       
            <groupId>fr.delthas</groupId>
            <artifactId>javaui</artifactId>
-           <version>1.0.8</version>
+           <version>1.0.9</version>
     </dependency>
 </dependencies>
 ```

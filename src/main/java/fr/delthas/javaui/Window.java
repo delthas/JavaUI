@@ -244,7 +244,7 @@ final class Window implements Drawer {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     boolean supported;
     try {
-      window = glfwCreateWindow(width, height, "Context Preloading", glfwGetPrimaryMonitor(), NULL);
+      window = glfwCreateWindow(width, height, "Context Preloading", NULL, NULL);
       supported = window != NULL;
     } catch (RuntimeException ignore) {
       // sometimes an exception can be thrown instead of returning NULL if the context version is unsupported
@@ -690,7 +690,7 @@ final class Window implements Drawer {
     glUseProgram(circleProgram);
     glBindVertexArray(circleVao);
     glUniform1f(indexCircleMinLength, width <= 0 ? 0 : (float) ((1 - width / radius) * (1 - width / radius)));
-    glUniform4f(indexCircleCircle, (float) ((x + translateX) * 2 / Window.width - 1), (float) ((y + translateY) * 2 / height - 1), (float) (radius * 2 / Window.width), (float) (radius * 2 / height));
+    glUniform4f(indexCircleCircle, (float) (((int) x + 0.5 + translateX) * 2 / Window.width - 1), (float) (((int) y + 0.5 + translateY) * 2 / height - 1), (float) (radius * 2 / Window.width), (float) (radius * 2 / height));
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
   }
   
@@ -698,7 +698,7 @@ final class Window implements Drawer {
   public void fillRectangle(double x, double y, double width, double height, double angle) {
     glUseProgram(program);
     glBindVertexArray(vao);
-    mat4x4.translation(-1, -1, 0).scale(2f / Window.width, 2f / Window.height, 1).translate((float) (x + translateX), (float) (y + translateY), 0).rotateZ((float) angle).scale((float) width, (float) height, 1);
+    mat4x4.translation(-1, -1, 0).scale(2f / Window.width, 2f / Window.height, 1).translate((float) ((int) x + 0.5 + translateX), (float) ((int) y + 0.5 + translateY), 0).rotateZ((float) angle).scale((float) width, (float) height, 1);
     bufferMat4x4.clear();
     glUniformMatrix4fv(indexStdMatrix, false, mat4x4.get(bufferMat4x4));
     glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -708,7 +708,7 @@ final class Window implements Drawer {
   public void drawLineCenter(double x, double y, double length, double angle) {
     glUseProgram(program);
     glBindVertexArray(vao);
-    mat4x4.translation(-1, -1, 0).scale(2f / width, 2f / height, 1).translate((float) (x + translateX), (float) (y + translateY), 0)
+    mat4x4.translation(-1, -1, 0).scale(2f / width, 2f / height, 1).translate((float) ((int) x + 0.5 + translateX), (float) ((int) y + 0.5 + translateY), 0)
             .rotateZ((float) angle).scale((float) length, 1, 1);
     bufferMat4x4.clear();
     glUniformMatrix4fv(indexStdMatrix, false, mat4x4.get(bufferMat4x4));
@@ -724,7 +724,7 @@ final class Window implements Drawer {
     glUseProgram(texProgram);
     glBindVertexArray(texVao);
     glBindTexture(GL_TEXTURE_2D, texture instanceof SimpleTexture ? ((SimpleTexture) texture).texture : ((AtlasTexture) texture).atlas.texture);
-    mat4x4.translation(-1, -1, 0).scale(2f / Window.width, 2f / Window.height, 1).translate((float) (x + translateX), (float) (y + translateY), 0).rotateZ((float) angle).scale((float) width, (float) height, 1);
+    mat4x4.translation(-1, -1, 0).scale(2f / Window.width, 2f / Window.height, 1).translate((float) ((int) x + 0.5 + translateX), (float) ((int) y + 0.5 + translateY), 0).rotateZ((float) angle).scale((float) width, (float) height, 1);
     glUniformMatrix4fv(indexTexScreenPosition, false, mat4x4.get(bufferMat4x4));
     if (texture instanceof SimpleTexture) {
       mat4x4.scaling(1f / texture.getWidth(), -1f / texture.getHeight(), 1).translate((float) s1, (float) t1, 0).scale((float) (s2 - s1), (float) (t2 - t1), 1).translate(0.5f, 0.5f, 0.0f);

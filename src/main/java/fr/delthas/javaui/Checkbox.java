@@ -36,20 +36,16 @@ public final class Checkbox extends Component {
     } else {
       drawer.setColor(Color.GRAY);
     }
-    drawer.fillRectangle(0, 0, getWidth(), getHeight(), false);
-    drawer.setColor(Color.BLACK);
-    drawer.fillRectangle(1, 1, getWidth() - 2, getHeight() - 2, false);
+    drawer.rectangle(0, 0, getWidth(), getHeight()).draw();
+    drawer.rectangle(1, 1, getWidth() - 2, getHeight() - 2).color(Color.BLACK).draw();
     double unit = getHeight() / 8;
     drawer.setColor(Color.WHITE);
-    drawer.fillRectangle(getWidth() - 7 * unit, unit, 6 * unit, 6 * unit, false);
-    drawer.setColor(Color.BLACK);
-    drawer.fillRectangle(getWidth() - 7 * unit + 1, unit + 1, 6 * unit - 2, 6 * unit - 2, false);
+    drawer.rectangle(getWidth() - 7 * unit, unit, 6 * unit, 6 * unit).color(Color.WHITE).draw();
+    drawer.rectangle(getWidth() - 7 * unit + 1, unit + 1, 6 * unit - 2, 6 * unit - 2).color(Color.BLACK).draw();
     if (checked) {
-      drawer.setColor(Color.WHITE);
-      drawer.fillRectangle(getWidth() - 5 * unit, 3 * unit, 2 * unit, 2 * unit, false);
+      drawer.rectangle(getWidth() - 5 * unit, 3 * unit, 2 * unit, 2 * unit).color(Color.WHITE).draw();
     }
-    drawer.setColor(down ? Color.WHITE : Color.LIGHT_GRAY);
-    drawer.drawText((getWidth() - unit) / 2, getHeight() / 2, text, Font.COMIC, 16, true, true);
+    drawer.text((getWidth() - unit) / 2, getHeight() / 2, text, Font.COMIC, 16).centered(true, true).color(down ? Color.WHITE : Color.LIGHT_GRAY).draw();
   }
   
   @Override

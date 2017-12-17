@@ -38,7 +38,7 @@ import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.system.MemoryUtil.*;
 
 @SuppressWarnings({"resource", "unused"})
-final class Window implements Drawer {
+final class Window extends Drawer {
   private static int width, height;
   long time = 0;
   private boolean compatibility;
@@ -50,7 +50,7 @@ final class Window implements Drawer {
   private int indexCircleCircle, indexCircleColor, indexCircleMinLength;
   private int indexFontFontPosition, indexFontImagePosition, indexFontColor;
   private int indexStdMatrix, indexStdColor;
-  private int indexTexScreenPosition, indexTexTexPosition;
+  private int indexTexScreenPosition, indexTexTexPosition, indexTexAlpha;
   private FloatBuffer bufferMat4x4;
   private Matrix4f mat4x4;
   private ArrayDeque<Double> translateStack = new ArrayDeque<>();
@@ -71,6 +71,13 @@ final class Window implements Drawer {
   private List<Object> inputs = new ArrayList<>();
   private FontKey lastFontKey;
   private FontData lastFontData;
+  private int mainStdColor;
+  private int mainCircleColor;
+  private int mainFontColor;
+  private int currentStdColor;
+  private int currentCircleColor;
+  private int currentFontColor;
+  private double currentTexAlpha = -1;
   
   {
     init();
@@ -107,6 +114,7 @@ final class Window implements Drawer {
     glfwSetErrorCallback(GLFWErrorCallback.createThrow());
     
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_AUTO_ICONIFY, GLFW_FALSE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
     
@@ -121,6 +129,8 @@ final class Window implements Drawer {
     height = vidmode.height();
     
     glfwWindowHint(GLFW_DECORATED, GL_FALSE);
+  
+    Drawer.DRAWER = this;
   }
   
   private void init() {
@@ -167,7 +177,7 @@ final class Window implements Drawer {
     int[] x = new int[1];
     int[] y = new int[1];
     ByteBuffer result = stbi_load_from_memory(buffer, x, y, new int[1], ignoreAlpha ? 3 : 4);
-    return Image.createImageRaw(result, x[0], y[0], ignoreAlpha, 2);
+    return fr.delthas.javaui.Image.createImageRaw(result, x[0], y[0], ignoreAlpha, 2);
   }
   
   void freeImage(Image image) {
@@ -547,6 +557,7 @@ final class Window implements Drawer {
     indexStdColor = glGetUniformLocation(program, "color");
     indexTexScreenPosition = glGetUniformLocation(texProgram, "screenPosition");
     indexTexTexPosition = glGetUniformLocation(texProgram, "texPosition");
+    indexTexAlpha = glGetUniformLocation(texProgram, "alpha");
     
     
     bufferRectangle = glGenBuffers();
@@ -686,18 +697,20 @@ final class Window implements Drawer {
   }
   
   @Override
-  public void fillRing(double x, double y, double radius, double width) {
+  public void fillRing(double x, double y, double radius, double width, Color color) {
     glUseProgram(circleProgram);
     glBindVertexArray(circleVao);
+    currentCircleColor = setColor(color, currentCircleColor, mainCircleColor, indexCircleColor);
     glUniform1f(indexCircleMinLength, width <= 0 ? 0 : (float) ((1 - width / radius) * (1 - width / radius)));
     glUniform4f(indexCircleCircle, (float) (((int) x + 0.5 + translateX) * 2 / Window.width - 1), (float) (((int) y + 0.5 + translateY) * 2 / height - 1), (float) (radius * 2 / Window.width), (float) (radius * 2 / height));
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
   }
   
   @Override
-  public void fillRectangle(double x, double y, double width, double height, double angle) {
+  public void fillRectangle(double x, double y, double width, double height, double angle, Color color) {
     glUseProgram(program);
     glBindVertexArray(vao);
+    currentStdColor = setColor(color, currentStdColor, mainStdColor, indexStdColor);
     mat4x4.translation(-1, -1, 0).scale(2f / Window.width, 2f / Window.height, 1).translate((float) ((int) x + 0.5 + translateX), (float) ((int) y + 0.5 + translateY), 0).rotateZ((float) angle).scale((float) width, (float) height, 1);
     bufferMat4x4.clear();
     glUniformMatrix4fv(indexStdMatrix, false, mat4x4.get(bufferMat4x4));
@@ -705,9 +718,10 @@ final class Window implements Drawer {
   }
   
   @Override
-  public void drawLineCenter(double x, double y, double length, double angle) {
+  public void drawLineCenter(double x, double y, double length, double angle, Color color) {
     glUseProgram(program);
     glBindVertexArray(vao);
+    currentStdColor = setColor(color, currentStdColor, mainStdColor, indexStdColor);
     mat4x4.translation(-1, -1, 0).scale(2f / width, 2f / height, 1).translate((float) ((int) x + 0.5 + translateX), (float) ((int) y + 0.5 + translateY), 0)
             .rotateZ((float) angle).scale((float) length, 1, 1);
     bufferMat4x4.clear();
@@ -716,7 +730,7 @@ final class Window implements Drawer {
   }
   
   @Override
-  public void drawImage(double x, double y, double width, double height, double s1, double t1, double s2, double t2, Texture texture, double angle) {
+  public void drawImage(double x, double y, double width, double height, double s1, double t1, double s2, double t2, Texture texture, double angle, double alpha) {
     Objects.requireNonNull(texture);
     if ((texture instanceof SimpleTexture && ((SimpleTexture) texture).destroyed) || (texture instanceof AtlasTexture && (((AtlasTexture) texture).destroyed || ((AtlasTexture) texture).atlas.destroyed))) {
       throw new RuntimeException("Tried to draw destroyed texture!");
@@ -726,6 +740,10 @@ final class Window implements Drawer {
     glBindTexture(GL_TEXTURE_2D, texture instanceof SimpleTexture ? ((SimpleTexture) texture).texture : ((AtlasTexture) texture).atlas.texture);
     mat4x4.translation(-1, -1, 0).scale(2f / Window.width, 2f / Window.height, 1).translate((float) ((int) x + 0.5 + translateX), (float) ((int) y + 0.5 + translateY), 0).rotateZ((float) angle).scale((float) width, (float) height, 1);
     glUniformMatrix4fv(indexTexScreenPosition, false, mat4x4.get(bufferMat4x4));
+    if (currentTexAlpha != alpha) {
+      currentTexAlpha = alpha;
+      glUniform1f(indexTexAlpha, (float) alpha);
+    }
     if (texture instanceof SimpleTexture) {
       mat4x4.scaling(1f / texture.getWidth(), -1f / texture.getHeight(), 1).translate((float) s1, (float) t1, 0).scale((float) (s2 - s1), (float) (t2 - t1), 1).translate(0.5f, 0.5f, 0.0f);
     } else if (texture instanceof AtlasTexture) {
@@ -806,7 +824,7 @@ final class Window implements Drawer {
   }
   
   @Override
-  public float[] drawTextPositions(double x, double y, String text, Font font, float size, boolean xCentered, boolean yCentered) {
+  public float[] drawText(double x, double y, String text, Font font, double size, boolean xCentered, boolean yCentered, Color color) {
     Objects.requireNonNull(text);
     Objects.requireNonNull(font);
     float[] sizes = new float[text.length() + 1];
@@ -815,11 +833,13 @@ final class Window implements Drawer {
       FloatBuffer ypos = stack.floats((float) (getHeight() - y));
       
       STBTTAlignedQuad q = STBTTAlignedQuad.mallocStack(stack);
-      
-      FontData fontData = getFontData(font, size);
+  
+      float floatSize = (float) size;
+      FontData fontData = getFontData(font, floatSize);
       
       glUseProgram(fontProgram);
       glBindVertexArray(fontVao);
+      currentFontColor = setColor(color, currentFontColor, mainFontColor, indexFontColor);
       
       glBindTexture(GL_TEXTURE_2D, fontData.texture);
       
@@ -827,7 +847,7 @@ final class Window implements Drawer {
       float yOffset = 0;
       
       if (xCentered) {
-        xOffset = getTextWidth(text, font, size) / 2;
+        xOffset = getTextWidth(text, font, floatSize) / 2;
       }
       
       if (yCentered) {
@@ -835,7 +855,7 @@ final class Window implements Drawer {
         int[] descent = new int[1];
         int[] lineGap = new int[1];
         stbtt_GetFontVMetrics(fontData.info, ascent, descent, lineGap);
-        yOffset = (descent[0] + ascent[0]) * stbtt_ScaleForPixelHeight(fontData.info, size) / 2;
+        yOffset = (descent[0] + ascent[0]) * stbtt_ScaleForPixelHeight(fontData.info, floatSize) / 2;
       }
       
       int codepointCount = text.codePointCount(0, text.length());
@@ -874,15 +894,20 @@ final class Window implements Drawer {
     return sizes;
   }
   
+  private int setColor(Color color, int current, int main, int index) {
+    int rgb = color == null ? main : color.getRGB();
+    if (current == rgb) { return current; }
+    glUniform3f(index, ((rgb >> 16) & 0xFF) / 256f, ((rgb >> 8) & 0xFF) / 256f, (rgb & 0xFF) / 256f);
+    return rgb;
+  }
+  
   @Override
   public void setColor(Color color) {
-    Objects.requireNonNull(color);
-    glUseProgram(program);
-    glUniform3f(indexStdColor, color.getRed() / 256f, color.getGreen() / 256f, color.getBlue() / 256f);
-    glUseProgram(circleProgram);
-    glUniform3f(indexCircleColor, color.getRed() / 256f, color.getGreen() / 256f, color.getBlue() / 256f);
-    glUseProgram(fontProgram);
-    glUniform3f(indexFontColor, color.getRed() / 256f, color.getGreen() / 256f, color.getBlue() / 256f);
+    if (color == null) { return; }
+    int rgb = color.getRGB();
+    mainStdColor = rgb;
+    mainCircleColor = rgb;
+    mainFontColor = rgb;
   }
   
   @SuppressWarnings("unchecked")

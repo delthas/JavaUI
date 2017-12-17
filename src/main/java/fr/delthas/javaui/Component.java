@@ -31,11 +31,39 @@ public class Component {
     this.y = y;
     this.width = width;
     this.height = height;
+    added();
   }
   
   void removeFromLayer() {
+    removed(layer, x, y, width, height);
     layer = null;
   }
+  
+  /**
+   * Called after this component is added to a layer.
+   * <p>
+   * This happens when one of the {@link Layer#addComponent(double, double, double, double, Component)} methods are called, right after its position and other information are set.
+   * <p>
+   * You may use {@link #getX()}, {@link #getY()}, {@link #getWidth()}, {@link #getHeight()}, {@link #getLayer()} to get information regarding the position, size, and layer onto which it was added.
+   */
+  protected void added() {}
+  
+  /**
+   * Called after this component is removed from a layer.
+   * <p>
+   * This happens when the {@link Layer#removeComponent(Component)} method is called, right after its position and other information <b>are UNSET</b>.
+   * <p>
+   * The usual getter methods ({@link #getX()}, {@link #getY()}, {@link #getWidth()}, {@link #getHeight()}, {@link #getLayer()}) will <b>NOT work</b> since the component has already been removed at the time of the method call.
+   * <p>
+   * You may call one of the {@link Layer#addComponent(double, double, double, double, Component)} methods on this component to add this component back if wanted.
+   *
+   * @param layer  The layer containing this compnent before the component was removed, as would have been returned by {@link #getLayer()}.
+   * @param x      The x position before the component was removed, as would have been returned by {@link #getX()}.
+   * @param y      The y position before the component was removed, as would have been returned by {@link #getY()}.
+   * @param width  The width before the component was removed, as would have been returned by {@link #getWidth()}.
+   * @param height The height before the component was removed, as would have been returned by {@link #getHeight()}.
+   */
+  protected void removed(Layer layer, double x, double y, double width, double height) {}
   
   /**
    * Called when a mouse move "event" propagates to this component.

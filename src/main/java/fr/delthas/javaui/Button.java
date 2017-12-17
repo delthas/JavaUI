@@ -37,11 +37,10 @@ public final class Button extends Component {
     } else {
       drawer.setColor(Color.GRAY);
     }
-    drawer.fillRectangle(0, 0, getWidth(), getHeight(), false);
-    drawer.setColor(Color.BLACK);
-    drawer.fillRectangle(1, 1, getWidth() - 2, getHeight() - 2, false);
+    drawer.rectangle(0, 0, getWidth(), getHeight()).draw();
+    drawer.rectangle(1, 1, getWidth() - 2, getHeight() - 2).color(Color.BLACK).draw();
     drawer.setColor(!isEnabled() ? Color.GRAY : down ? Color.WHITE : Color.LIGHT_GRAY);
-    drawer.drawText(getWidth() / 2, getHeight() / 2, text, Font.COMIC, 16, true, true);
+    drawer.text(getWidth() / 2, getHeight() / 2, text, Font.COMIC, 16).centered(true, true).draw();
   }
   
   @Override

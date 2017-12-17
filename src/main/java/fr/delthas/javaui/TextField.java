@@ -77,12 +77,10 @@ public class TextField extends Component {
     } else {
       drawer.setColor(Color.GRAY);
     }
-    drawer.fillRectangle(0, 0, getWidth(), getHeight(), false);
-    drawer.setColor(Color.BLACK);
-    drawer.fillRectangle(1, 1, getWidth() - 2, getHeight() - 2, false);
+    drawer.rectangle(0, 0, getWidth(), getHeight()).draw();
+    drawer.rectangle(1, 1, getWidth() - 2, getHeight() - 2).color(Color.BLACK).draw();
     if (drawnText.isEmpty() && !isInBounds(inputState.getMouseX(), inputState.getMouseY())) {
-      drawer.setColor(Color.DARK_GRAY);
-      drawer.drawText(getWidth() / 2, getHeight() / 2, hintText, Font.COMIC, 16, true, true);
+      drawer.text(getWidth() / 2, getHeight() / 2, hintText, Font.COMIC, 16).centered(true, true).color(Color.DARK_GRAY).draw();
       return;
     }
     if (!drawnText.isEmpty()) {
@@ -96,23 +94,17 @@ public class TextField extends Component {
           selection0 = selectionStart;
           selection1 = selectionEnd;
         }
-        drawer.setColor(Color.WHITE);
-        drawer.drawText(getWidth() / 2 - sizes[length(drawnText) - 1] / 2, getHeight() / 2, drawnText.substring(0, selection0), Font.COMIC, 16, false, true);
-        drawer.setColor(Color.LIGHT_GRAY);
-        drawer.fillRectangle(getWidth() / 2 - sizes[length(drawnText) - 1] / 2 + (selection0 == 0 ? 0 : sizes[selection0 - 1]), getHeight() / 2 + metrics.getDescent() - (metrics.getDescent() + metrics.getAscent()) / 2, sizes[selection1 - 1] - (selection0 == 0 ? 0 : sizes[selection0 - 1]), metrics.getAscent() - metrics.getDescent(), false);
-        drawer.setColor(Color.BLACK);
-        drawer.drawText(getWidth() / 2 - sizes[length(drawnText) - 1] / 2 + (selection0 == 0 ? 0 : sizes[selection0 - 1]), getHeight() / 2, drawnText.substring(selection0, selection1), Font.COMIC, 16, false, true);
-        drawer.setColor(Color.WHITE);
-        drawer.drawText(getWidth() / 2 - sizes[length(drawnText) - 1] / 2 + sizes[selection1 - 1], getHeight() / 2, drawnText.substring(selection1), Font.COMIC, 16, false, true);
+        drawer.text(getWidth() / 2 - sizes[length(drawnText) - 1] / 2, getHeight() / 2, drawnText.substring(0, selection0), Font.COMIC, 16).centered(false, true).color(Color.WHITE).draw();
+        drawer.rectangle(getWidth() / 2 - sizes[length(drawnText) - 1] / 2 + (selection0 == 0 ? 0 : sizes[selection0 - 1]), getHeight() / 2 + metrics.getDescent() - (metrics.getDescent() + metrics.getAscent()) / 2, sizes[selection1 - 1] - (selection0 == 0 ? 0 : sizes[selection0 - 1]), metrics.getAscent() - metrics.getDescent()).color(Color.LIGHT_GRAY).draw();
+        drawer.text(getWidth() / 2 - sizes[length(drawnText) - 1] / 2 + (selection0 == 0 ? 0 : sizes[selection0 - 1]), getHeight() / 2, drawnText.substring(selection0, selection1), Font.COMIC, 16).centered(false, true).color(Color.BLACK).draw();
+        drawer.text(getWidth() / 2 - sizes[length(drawnText) - 1] / 2 + sizes[selection1 - 1], getHeight() / 2, drawnText.substring(selection1), Font.COMIC, 16).centered(false, true).color(Color.WHITE).draw();
       } else {
-        drawer.setColor(Color.WHITE);
-        drawer.drawText(getWidth() / 2, getHeight() / 2, drawnText, Font.COMIC, 16, true, true);
+        drawer.text(getWidth() / 2, getHeight() / 2, drawnText, Font.COMIC, 16).centered(true, true).color(Color.WHITE).draw();
       }
     }
     if (isInBounds(inputState.getMouseX(this), inputState.getMouseY(this))) {
       float position = (float) (drawnText.isEmpty() ? getWidth() / 2 : getWidth() / 2 - sizes[length(drawnText) - 1] / 2 + (caretPosition == 0 ? 0 : sizes[caretPosition - 1]));
-      drawer.setColor(Color.GRAY);
-      drawer.fillRectangle(position - 1, getHeight() / 2 + metrics.getDescent() - (metrics.getDescent() + metrics.getAscent()) / 2, 1, metrics.getAscent() - metrics.getDescent(), false);
+      drawer.rectangle(position - 1, getHeight() / 2 + metrics.getDescent() - (metrics.getDescent() + metrics.getAscent()) / 2, 1, metrics.getAscent() - metrics.getDescent()).color(Color.GRAY).draw();
     }
   }
   

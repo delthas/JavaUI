@@ -21,7 +21,7 @@ import java.util.Objects;
  * @see #push()
  */
 public final class Layer {
-  protected List<Component> components = new ArrayList<>();
+  private final List<Component> components = new ArrayList<>();
   private boolean opaque;
   
   /**

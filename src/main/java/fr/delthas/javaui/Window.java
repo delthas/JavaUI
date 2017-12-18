@@ -78,6 +78,8 @@ final class Window extends Drawer {
   private int currentCircleColor;
   private int currentFontColor;
   private double currentTexAlpha = -1;
+  // fix macOS main thread==first thread undocumented OpenGL limitation
+  private boolean glfwForceMainThread = System.getProperty("os.name").startsWith("Mac");
   
   {
     init();
@@ -134,43 +136,47 @@ final class Window extends Drawer {
   }
   
   private void init() {
-    new Thread(() -> {
+    if (glfwForceMainThread) {
       _init();
-      while (true) {
-        if (created) {
-          glfwPollEvents();
-        }
-        Object object = null;
-        try {
-          object = synchronousQueue.poll(1, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException ignore) {
-        }
-        if (object == null) {
-          continue;
-        }
-        if (object instanceof CreateRequest) {
-          CreateRequest createRequest = (CreateRequest) object;
-          _create(createRequest.title, createRequest.image, createRequest.fullscreen);
-          glfwMakeContextCurrent(NULL);
+    } else {
+      new Thread(() -> {
+        _init();
+        while (true) {
+          if (created) {
+            glfwPollEvents();
+          }
+          Object object = null;
           try {
-            synchronousQueue.put(new Object());
+            object = synchronousQueue.poll(1, TimeUnit.MILLISECONDS);
           } catch (InterruptedException ignore) {
           }
-        }
-        if (object instanceof DestroyRequest) {
-          glfwMakeContextCurrent(window);
-          _destroy();
-          return;
-        }
-        if (object instanceof InputRequest) {
-          try {
-            synchronousQueue.put(inputs);
-            inputs = new ArrayList<>();
-          } catch (InterruptedException ignore) {
+          if (object == null) {
+            continue;
+          }
+          if (object instanceof CreateRequest) {
+            CreateRequest createRequest = (CreateRequest) object;
+            _create(createRequest.title, createRequest.image, createRequest.fullscreen);
+            glfwMakeContextCurrent(NULL);
+            try {
+              synchronousQueue.put(new Object());
+            } catch (InterruptedException ignore) {
+            }
+          }
+          if (object instanceof DestroyRequest) {
+            glfwMakeContextCurrent(window);
+            _destroy();
+            return;
+          }
+          if (object instanceof InputRequest) {
+            try {
+              synchronousQueue.put(inputs);
+              inputs = new ArrayList<>();
+            } catch (InterruptedException ignore) {
+            }
           }
         }
-      }
-    }).start();
+      }).start();
+    }
   }
   
   Image createImage(ByteBuffer buffer, boolean ignoreAlpha) {
@@ -235,13 +241,17 @@ final class Window extends Drawer {
   }
   
   void create(String title, Image image, boolean fullscreen) {
-    try {
-      synchronousQueue.put(new CreateRequest(title, image, fullscreen));
-    } catch (InterruptedException ignore) {
-    }
-    try {
-      synchronousQueue.take();
-    } catch (InterruptedException ignore) {
+    if (glfwForceMainThread) {
+      _create(title, image, fullscreen);
+    } else {
+      try {
+        synchronousQueue.put(new CreateRequest(title, image, fullscreen));
+      } catch (InterruptedException ignore) {
+      }
+      try {
+        synchronousQueue.take();
+      } catch (InterruptedException ignore) {
+      }
     }
     glfwMakeContextCurrent(window);
     GL.createCapabilities(true);
@@ -367,7 +377,7 @@ final class Window extends Drawer {
               break;
             case GL_DEBUG_SOURCE_OTHER:
             default:
-              sourceS = "Autre";
+              sourceS = "Other";
               break;
           }
           String typeS;
@@ -398,28 +408,28 @@ final class Window extends Drawer {
               break;
             case GL_DEBUG_TYPE_OTHER:
             default:
-              typeS = "Autre";
+              typeS = "Other";
               break;
           }
           String severityS;
           switch (severity) {
             case GL_DEBUG_SEVERITY_HIGH:
-              severityS = "Haute";
+              severityS = "High";
               break;
             case GL_DEBUG_SEVERITY_MEDIUM:
-              severityS = "Moyen";
+              severityS = "Medium";
               break;
             case GL_DEBUG_SEVERITY_LOW:
-              severityS = "Bas";
+              severityS = "Low";
               break;
             case GL_DEBUG_SEVERITY_NOTIFICATION:
               severityS = "Notification";
               break;
             default:
-              severityS = "Autre";
+              severityS = "Other";
               break;
           }
-          System.err.println("Source: " + sourceS + " - Type: " + typeS + " - Sévérité: " + severityS + " - Id: " + id + " - Message: "
+          System.err.println("OpenGL Warning/Error: Source: " + sourceS + " - Type: " + typeS + " - Severity: " + severityS + " - Id: " + id + " - Message: "
                   + MemoryUtil.memUTF8(MemoryUtil.memByteBuffer(message, length)));
           if (severity != GL_DEBUG_SEVERITY_NOTIFICATION) {
             Thread.dumpStack();
@@ -633,10 +643,15 @@ final class Window extends Drawer {
   }
   
   void destroy() {
-    glfwMakeContextCurrent(NULL);
-    try {
-      synchronousQueue.put(new DestroyRequest());
-    } catch (InterruptedException ignore) {
+    if (glfwForceMainThread) {
+      glfwMakeContextCurrent(window);
+      _destroy();
+    } else {
+      glfwMakeContextCurrent(NULL);
+      try {
+        synchronousQueue.put(new DestroyRequest());
+      } catch (InterruptedException ignore) {
+      }
     }
   }
   
@@ -912,36 +927,43 @@ final class Window extends Drawer {
   
   @SuppressWarnings("unchecked")
   void input() {
-    try {
-      synchronousQueue.put(new InputRequest());
-    } catch (InterruptedException ignore) {
-    }
-    try {
-      List<Object> inputs = (List<Object>) synchronousQueue.take();
-      for (Object input : inputs) {
-        if (input instanceof MoveInput) {
-          Ui.getUi().pushMouseMove(((MoveInput) input).x, ((MoveInput) input).y, ((MoveInput) input).time);
-          continue;
-        }
-        if (input instanceof KeyInput) {
-          Ui.getUi().pushKeyButton(((KeyInput) input).key, ((KeyInput) input).down, ((KeyInput) input).time);
-          continue;
-        }
-        if (input instanceof MouseInput) {
-          Ui.getUi().pushMouseButton(((MouseInput) input).button, ((MouseInput) input).down, ((MouseInput) input).time);
-          continue;
-        }
-        if (input instanceof ScrollInput) {
-          Ui.getUi().pushMouseScroll(((ScrollInput) input).scroll, ((ScrollInput) input).time);
-          continue;
-        }
-        if (input instanceof ModsInput) {
-          Ui.getUi().pushChar(new String(new int[]{((ModsInput) input).codepoint}, 0, 1), ((ModsInput) input).mods, ((ModsInput) input).time);
-          continue;
-        }
+    List<Object> inputs = null;
+    if (glfwForceMainThread) {
+      if (created) {
+        glfwPollEvents();
       }
-    } catch (InterruptedException ignore) {
+      inputs = this.inputs;
+    } else {
+      try {
+        synchronousQueue.put(new InputRequest());
+        inputs = (List<Object>) synchronousQueue.take();
+      } catch (InterruptedException ignore) {
+      }
     }
+    if (inputs == null) { return; }
+    for (Object input : inputs) {
+      if (input instanceof MoveInput) {
+        Ui.getUi().pushMouseMove(((MoveInput) input).x, ((MoveInput) input).y, ((MoveInput) input).time);
+        continue;
+      }
+      if (input instanceof KeyInput) {
+        Ui.getUi().pushKeyButton(((KeyInput) input).key, ((KeyInput) input).down, ((KeyInput) input).time);
+        continue;
+      }
+      if (input instanceof MouseInput) {
+        Ui.getUi().pushMouseButton(((MouseInput) input).button, ((MouseInput) input).down, ((MouseInput) input).time);
+        continue;
+      }
+      if (input instanceof ScrollInput) {
+        Ui.getUi().pushMouseScroll(((ScrollInput) input).scroll, ((ScrollInput) input).time);
+        continue;
+      }
+      if (input instanceof ModsInput) {
+        Ui.getUi().pushChar(new String(new int[]{((ModsInput) input).codepoint}, 0, 1), ((ModsInput) input).mods, ((ModsInput) input).time);
+        continue;
+      }
+    }
+    if (glfwForceMainThread) { this.inputs.clear(); }
   }
   
   public String getClipboard() {

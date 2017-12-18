@@ -37,7 +37,7 @@ import java.awt.*;
  * </pre>
  */
 public abstract class Drawer {
-  /*er-l BuiBuillderer-ler-l
+  /** Li* Re* Ci* Ri* Teed static Drawer DRAWER;
   
   // prevent external override
   Drawer() {
@@ -144,7 +144,7 @@ public abstract class Drawer {
    *
    * @param x      The x coordinate of the rectangle, adjusted by the translation stack.
    * @param y      The y coordinate of the rectangle, adjusted by the translation stack.
-   * @param width  The width of the rectangle.
+   * @param width The width of the rectangle.
    * @param height The height of the rectangle.
    * @return A {@link RectangleBuilder} to draw the specified rectangle.
    * @see RectangleBuilder
@@ -180,7 +180,7 @@ public abstract class Drawer {
    * @param x      The x coordinate of the ring, adjusted by the translation stack.
    * @param y      The y coordinate of the ring, adjusted by the translation stack.
    * @param radius The outer radius of the ring.
-   * @param width  The width of the ring.
+   * @param width The width of the ring.
    * @return A {@link RingBuilder} to draw the specified ring.
    * @see RingBuilder
    */
@@ -195,8 +195,8 @@ public abstract class Drawer {
    * <p>
    * The x and y coordinates specify the lower-left corner of the text bounds, by default, see {@link TextBuilder#centered(boolean, boolean)}.
    *
-   * @param x    The x coordinate of the text, adjusted by the translation stack.
-   * @param y    The y coordinate of the text, adjusted by the translation stack.
+   * @param x      The x coordinate of the text, adjusted by the translation stack.
+   * @param y      The y coordinate of the text, adjusted by the translation stack.
    * @param text The text string to draw, must be non-null, drawing the empty string is a no-op.
    * @param font The font of the text, must be non-null.
    * @param size The font size of the text, in pt.
@@ -211,15 +211,13 @@ public abstract class Drawer {
   
   protected abstract void fillRing(double x, double y, double radius, double width, Color color);
   
-  protected abstract void fillRectang
-  
+  protected a
   /**
    * ImageBuilder is a Builder-like interface that lets you specify various image-related parameters and draw an image with {@link #draw()}.
    * <p>
    * Note that, for performance, the instance returned by {@link Drawer#image(double, double, Texture)} may be the same between calls, and that the Builder-like pattern may be internally emulated by simply resetting the object between calls to {@link Drawer#image(double, double, Texture)}.
    */
   public static final class ImageBuilder {
-    private static final ImageBuilder INSTANCE = new ImageBuilder();
     private double x;
     private double y;
     private double width;
@@ -232,6 +230,7 @@ public abstract class Drawer {
     private double angle;
     private double alpha;
     private boolean centered;
+    private static final ImageBuilder INSTANCE = new ImageBuilder();
     
     private static ImageBuilder get(double x, double y, Texture texture) {
       INSTANCE.x = x;
@@ -254,7 +253,7 @@ public abstract class Drawer {
      * <p>
      * Calling this method will resize the image to fit exactly the specified width and height, <b>NOT keeping the aspect ratio</b>. By default this is set to the width and height of the texture, e.g. {@code width = texture.getWidth(); height = texture.getHeight()}.
      *
-     * @param width  The width of the resized image.
+     * @param width The width of the resized image.
      * @param height The height of the resized image.
      * @return Self, for chaining.
      */
@@ -271,10 +270,10 @@ public abstract class Drawer {
      * <p>
      * If the image is to be resized using {@link #size(double, double)}, the image <p>part</p> will be resized, so that the image part resized width and image part resized height are exactly those of the specified width and height.
      *
-     * @param s1 The x coordinate of the lower-left corner of the image part, relative to the lower-left corner of the image (not adujsted by the translation stack).
-     * @param t1 The y coordinate of the lower-left corner of the image part, relative to the lower-left corner of the image (not adujsted by the translation stack).
-     * @param s2 The x coordinate of the upper-right corner of the image part, relative to the lower-left corner of the image (not adujsted by the translation stack).
-     * @param t2 The y coordinate of the upper-right corner of the image part, relative to the lower-left corner of the image (not adujsted by the translation stack).
+     * @param s1      The x coordinate of the lower-left corner of the image part, relative to the lower-left corner of the image (not adujsted by the translation stack).
+     * @param t1      The y coordinate of the lower-left corner of the image part, relative to the lower-left corner of the image (not adujsted by the translation stack).
+     * @param s2      The x coordinate of the upper-right corner of the image part, relative to the lower-left corner of the image (not adujsted by the translation stack).
+     * @param t2      The y coordinate of the upper-right corner of the image part, relative to the lower-left corner of the image (not adujsted by the translation stack).
      * @return Self, for chaining.
      */
     public ImageBuilder texCoords(double s1, double t1, double s2, double t2) {
@@ -290,7 +289,7 @@ public abstract class Drawer {
      * <p>
      * The image will be rotated with the postivie (counter-clockwise) angle specified, in radians. By default the image will not be resized, e.g. {@code angle = 0.0}.
      *
-     * @param angle The positive angle (counter-clockwise) of the image to draw, in radians.
+     * @param angle   The positive angle (counter-clockwise) of the image to draw, in radians.
      * @return Self, for chaining.
      */
     public ImageBuilder angle(double angle) {
@@ -303,7 +302,7 @@ public abstract class Drawer {
      * <p>
      * The image alpha will be multiplied by the specified coefficient, 0.0 meaning full transparency, 1.0 meaning full opacity. By default the image will be unchanged regarding trasparency, e.g. {@code alpha = 1.0}.
      *
-     * @param alpha The alpha coefficient to multiply the image alpha by, between 0.0 (full transparency), and 1.0 (full opacity).
+     * @param alpha   The alpha coefficient to multiply the image alpha by, between 0.0 (full transparency), and 1.0 (full opacity).
      * @return Self, for chaining.
      */
     public ImageBuilder alpha(double alpha) {
@@ -316,7 +315,7 @@ public abstract class Drawer {
      * <p>
      * If set to true, the x and y coordinates will be offset by half the (resized) image width and height respectively. By default this is false.
      *
-     * @param centered Whether the coordinates are relative to the image center (true) or its lower-left corner (false).
+     * @param centered   Whether the coordinates are relative to the image center (true) or its lower-left corner (false).
      * @return Self, for chaining.
      */
     public ImageBuilder centered(boolean centered) {
@@ -338,45 +337,18 @@ public abstract class Drawer {
     }
   }
   
-le(double x, double y, double width, double height, double angle, Color color);
+  bstract
   
-  protected abstract void drawImage(d
-*
-        *ImageInBuilder is a Builder-like interface that lets you specify various image-related parameters and draw them with {@link #draw()},
-  by resizing
-  it to
-  fit inside
-  the specified
-  bounds.
+  void fillRectangle(double x, double y, double width, double height, double angle, Color color);
+  
+  protected a
+  
+  /**
+   * ImageInBuilder is a Builder-like interface that lets you specify various image-related parameters and draw them with {@link #draw()}, by resizing it to fit inside the specified bounds.
    * <p>
-   *
-  Note that, for performance,
-  the instance
-  returned by
-  
-  {@link Drawer#imageIn(double, double, double, double,Texture)}
-  
-  may be
-  the same
-  between calls, and
-  that the
-  Builder-
-  like pattern
-  may be
-  internally emulated
-  by simply
-  resetting the
-  object between
-  calls to
-  
-  {@link Drawer#imageIn(double, double, double, double,Texture)}.
-          */
-  
+   * Note that, for performance, the instance returned by {@link Drawer#imageIn(double, double, double, double, Texture)} may be the same between calls, and that the Builder-like pattern may be internally emulated by simply resetting the object between calls to {@link Drawer#imageIn(double, double, double, double, Texture)}.
+   */
   public static final class ImageInBuilder {
-    private double angle;
-    pripate
-    boolean centered;
-    rivate static final I
     private double x;
     private double y;
     private double width;
@@ -386,7 +358,10 @@ le(double x, double y, double width, double height, double angle, Color color);
     private double s2;
     private double t2;
     private Texture texture;
-    vmageInBuilder INSTANCE = new ImageInBuilder();
+    private static final ImageInBuilder INSTANCE = new ImageInBuilder();
+    private double angle;
+    private double alpha;
+    private boolean centered;
     
     private static ImageInBuilder get(double x, double y, double width, double height, Texture texture) {
       INSTANCE.x = x;
@@ -411,10 +386,10 @@ le(double x, double y, double width, double height, double angle, Color color);
      * <p>
      * The image <p>part</p> will be resized to fit the bounds, so that the image part resized width and image part resized height will fit the bounds.
      *
-     * @param s1 The x coordinate of the lower-left corner of the image part, relative to the lower-left corner of the image (not adujsted by the translation stack).
-     * @param t1 The y coordinate of the lower-left corner of the image part, relative to the lower-left corner of the image (not adujsted by the translation stack).
-     * @param s2 The x coordinate of the upper-right corner of the image part, relative to the lower-left corner of the image (not adujsted by the translation stack).
-     * @param t2 The y coordinate of the upper-right corner of the image part, relative to the lower-left corner of the image (not adujsted by the translation stack).
+     * @param s1      The x coordinate of the lower-left corner of the image part, relative to the lower-left corner of the image (not adujsted by the translation stack).
+     * @param t1      The y coordinate of the lower-left corner of the image part, relative to the lower-left corner of the image (not adujsted by the translation stack).
+     * @param s2      The x coordinate of the upper-right corner of the image part, relative to the lower-left corner of the image (not adujsted by the translation stack).
+     * @param t2      The y coordinate of the upper-right corner of the image part, relative to the lower-left corner of the image (not adujsted by the translation stack).
      * @return Self, for chaining.
      */
     public ImageInBuilder texCoords(double s1, double t1, double s2, double t2) {
@@ -430,7 +405,7 @@ le(double x, double y, double width, double height, double angle, Color color);
      * <p>
      * The image will be rotated with the postivie (counter-clockwise) angle specified, in radians. By default the image will not be resized, e.g. {@code angle = 0.0}.
      *
-     * @param angle The positive angle (counter-clockwise) of the image to draw, in radians.
+     * @param angle   The positive angle (counter-clockwise) of the image to draw, in radians.
      * @return Self, for chaining.
      */
     public ImageInBuilder angle(double angle) {
@@ -443,7 +418,7 @@ le(double x, double y, double width, double height, double angle, Color color);
      * <p>
      * The image alpha will be multiplied by the specified coefficient, 0.0 meaning full transparency, 1.0 meaning full opacity. By default the image will be unchanged regarding trasparency, e.g. {@code alpha = 1.0}.
      *
-     * @param alpha The alpha coefficient to multiply the image alpha by, between 0.0 (full transparency), and 1.0 (full opacity).
+     * @param alpha   The alpha coefficient to multiply the image alpha by, between 0.0 (full transparency), and 1.0 (full opacity).
      * @return Self, for chaining.
      */
     public ImageInBuilder alpha(double alpha) {
@@ -456,7 +431,7 @@ le(double x, double y, double width, double height, double angle, Color color);
      * <p>
      * If set to true, the x and y coordinates will be offset by half the <b>bounds</b> width and height respectively. By default this is false.
      *
-     * @param centered Whether the coordinates are relative to the <b>bounds</b> center (true) or its lower-left corner (false).
+     * @param centered   Whether the coordinates are relative to the <b>bounds</b> center (true) or its lower-left corner (false).
      * @return Self, for chaining.
      */
     public ImageInBuilder centered(boolean centered) {
@@ -488,29 +463,38 @@ le(double x, double y, double width, double height, double angle, Color color);
     }
   }
   
-  /**
-   * LineBuilder is a Buildouble x, double y, double width, double height, double s1, double t1, double s2, double t2, Texture texture, double angle, double alpha);
-   * <p>
-   * protected abstract float[] drawText
-   * ike interface that lets you specify various line-related parameters and draw a simple 1-pixel wide line with {@link #draw()}.
+  bstract
+  
+  void drawImage(double x, double y, double width, double height, double s1, double t1, double s2, double t2, Texture texture, double angle, double alpha);
+  
+  protected a
+*
+        *
+  LineBuilder is
+  a Builder-like
+  
+  interface that lets you specify various line-
+  related parameters
+  and draw
+  a simple 1-
+  pixel wide
+  line with
+  
+  {@link #draw()}.
    * <p>
    * Note that, for performance, the instance returned by {@link Drawer#line(double, double, double, double)} may be the same between calls, and that the Builder-like pattern may be internally emulated by simply resetting the object between calls to {@link Drawer#line(double, double, double, double)}.
    */
   public static final class LineBuilder {
     private double x1;
-    private doINSTANCE =new
-    
-    LineBuilder();
-    
-    private static LineBuilder geouble
-    y1;
+    private static final LineBuilder INSTANCE = new LineBuilder();
     private double x2;
     private double y2;
-    private Calor color;
-    privder te
-    
-    static final LineBuilt(do
-                           uble x1, double y1, double x2, double y2) {
+    privprivate
+    double y1;
+    ate Color
+    color;
+  
+    private static LineBuilder get(double x1, double y1, double x2, double y2) {
       INSTANCE.x1 = x1;
       INSTANCE.y1 = y1;
       INSTANCE.x2 = x2;
@@ -524,7 +508,7 @@ le(double x, double y, double width, double height, double angle, Color color);
      * <p>
      * If set to null, the default color will be used. By default this parameter is null, and the line will be drawn with the default color.
      *
-     * @param color The color to use to draw the line, or null to use the default color.
+     * @param color   The color to use to draw the line, or null to use the default color.
      * @return Self, for chaining.
      */
     public LineBuilder color(Color color) {
@@ -543,28 +527,28 @@ le(double x, double y, double width, double height, double angle, Color color);
   }
   
   /**
-   * LineCenterBuilder is a(double x, double y, String text, Font font, double size, boolean xCentered, boolean yCentered, Color color);
-   * <p>
-   * <p>
-   * /**
-   * Returns the line height fo
-   * lder-like interface that lets you specify various line-related parameters and draw a simple 1-pixel wide line with {@link #draw()}.
+   bstract float[] drawText(double x, double y, String text, Font font, double size, boolean xCentered, boolean yCentered, Color color);
+ 
+ 
+   /**
+   * Re
+   neCenterBuilder is a Builder-like interface that lets you specify various line-related parameters and draw a simple 1-pixel wide line with {@link #draw()}.
    * <p>
    * Note that, for performance, the instance returned by {@link Drawer#lineCenter(double, double, double, double)} may be the same between calls, and that the Builder-like pattern may be internally emulated by simply resetting the object between calls to {@link Drawer#lineCenter(double, double, double, double)}.
    */
   public static final class LineCenterBuilder {
     private double x;
-    private douilder INSTANCE = new LineCenterBuilder();
-    private static LineCenterBuiluble y;
-    private dotble length;
-    privaee
-    double angle;
-    privata Color
+    private dtatic
+    final LineCenterBuilder INSTANCE = new LineCenterBuilder();
+    pridouble y;
+    private double length;
+    private Couble angle;
+    private vate solor
     color;
-    
-    priverBute
-    
-    static final LineCentder
+  
+    private s
+    tatic LineCenterBuilder
+  
     get(double x, double y, double length, double angle) {
       INSTANCE.x = x;
       INSTANCE.y = y;
@@ -579,7 +563,7 @@ le(double x, double y, double width, double height, double angle, Color color);
      * <p>
      * If set to null, the default color will be used. By default this parameter is null, and the line will be drawn with the default color.
      *
-     * @param color The color to use to draw the line, or null to use the default color.
+     * @param color   The color to use to draw the line, or null to use the default color.
      * @return Self, for chaining.
      */
     public LineCenterBuilder color(Color color) {
@@ -598,7 +582,7 @@ le(double x, double y, double width, double height, double angle, Color color);
   }
   
   /**
-   * RectangleBuilder is a r a specified font and font size, in pixels.
+   turns the line height for a specified font and font size, in pixels.
    * <p>
    * The line height is the number of vertical pixels that should be put two lines of text for this font and font size. For example, to draw two lines of text, first draw a line of text at {@code y}, then draw a second line at {@code y - getLineHeight(font, size)}.
    * <p>
@@ -613,29 +597,27 @@ le(double x, double y, double width, double height, double angle, Color color);
   }
   
   /**
-   * Returns the font metrics f
-   der-like interface that lets you specify various rectangle-related parameters and draw/fill a rectangle with {@link #draw()}.
+   * Re
+   ctangleBuilder is a Builder-like interface that lets you specify various rectangle-related parameters and draw/fill a rectangle with {@link #draw()}.
    * <p>
    * Note that, for performance, the instance returned by {@link Drawer#rectangle(double, double, double, double)} may be the same between calls, and that the Builder-like pattern may be internally emulated by simply resetting the object between calls to {@link Drawer#rectangle(double, double, double, double)}.
    */
   public static final class RectangleBuilder {
     private double x;
-    private doulder INSTANCE = new RectangleBuilder();
-    private static RectangleBuilduble y;
-    private doeble width;
-    privatt
-    double height;
-    privaie
-    boolean centered;
-    prevate
-    double angle;
-    privata Color
+    private dtatic
+    final RectangleBuilder INSTANCE = new RectangleBuilder();
+    pridouble y;
+    private double width;
+    private bouble height;
+    private doolean centered;
+    private Couble angle;
+    private vate solor
     color;
   
-    priveBuite
-    static final Rectangler g
+    private s
+    tatic RectangleBuilder
   
-    et(double x, double y, double width, double height) {
+    get(double x, double y, double width, double height) {
       INSTANCE.x = x;
       INSTANCE.y = y;
       INSTANCE.width = width;
@@ -651,7 +633,7 @@ le(double x, double y, double width, double height, double angle, Color color);
      * <p>
      * If set to true, the x and y coordinates will be offset by half the rectangle width and height respectively. By default this is false.
      *
-     * @param centered Whether the coordinates are relative to the rectangle center (true) or its lower-left corner (false).
+     * @param centered   Whether the coordinates are relative to the rectangle center (true) or its lower-left corner (false).
      * @return Self, for chaining.
      */
     public RectangleBuilder centered(boolean centered) {
@@ -664,7 +646,7 @@ le(double x, double y, double width, double height, double angle, Color color);
      * <p>
      * The rectangle will be rotated with the postivie (counter-clockwise) angle specified, in radians. By default the rectangle will not be resized, e.g. {@code angle = 0.0}.
      *
-     * @param angle The positive angle (counter-clockwise) of the rectangle to draw, in radians.
+     * @param angle   The positive angle (counter-clockwise) of the rectangle to draw, in radians.
      * @return Self, for chaining.
      */
     public RectangleBuilder angle(double angle) {
@@ -677,7 +659,7 @@ le(double x, double y, double width, double height, double angle, Color color);
      * <p>
      * If set to null, the default color will be used. By default this parameter is null, and the rectangle will be drawn with the default color.
      *
-     * @param color The color to use to draw the rectangle, or null to use the default color.
+     * @param color   The color to use to draw the rectangle, or null to use the default color.
      * @return Self, for chaining.
      */
     public RectangleBuilder color(Color color) {
@@ -700,7 +682,7 @@ le(double x, double y, double width, double height, double angle, Color color);
   }
   
   /**
-   * CircleBuilder is a Buior a specified font and font size (ascent, descent, line gap, line height).
+   turns the font metrics for a specified font and font size (ascent, descent, line gap, line height).
    * <p>
    * For a detailed description of the metrics, see the {@link FontMetrics} class and functions Javadoc.
    *
@@ -711,26 +693,25 @@ le(double x, double y, double width, double height, double angle, Color color);
   public abstract FontMetrics getFontMetrics(Font font, float size);
   
   /**
-   * Returns the width, in pixe
-   -like interface that lets you specify various circle-related parameters and draw/fill a circle with {@link #draw()}.
+   * Re
+   rcleBuilder is a Builder-like interface that lets you specify various circle-related parameters and draw/fill a circle with {@link #draw()}.
    * <p>
    * Note that, for performance, the instance returned by {@link Drawer#circle(double, double, double)} may be the same between calls, and that the Builder-like pattern may be internally emulated by simply resetting the object between calls to {@link Drawer#circle(double, double, double)}.
    */
   public static final class CircleBuilder {
     private double x;
-    private dour INSTANCE = new CircleBuilder();
-    private static CircleBuilder uble
-    y;
-    private dotble radius;
-    privaie
-    boolean centered;
-    pravate Color
+    private dtatic
+    final CircleBuilder INSTANCE = new CircleBuilder();
+    pridouble y;
+    private bouble radius;
+    private Coolean centered;
+    private vate solor
     color;
-    
-    privildete
-    
-    static final CircleBuget(
-            double x, double y, double radius) {
+  
+    private s
+    tatic CircleBuilder
+  
+    get(double x, double y, double radius) {
       INSTANCE.x = x;
       INSTANCE.y = y;
       INSTANCE.radius = radius;
@@ -744,7 +725,7 @@ le(double x, double y, double width, double height, double angle, Color color);
      * <p>
      * If set to true, the x and y coordinates will be offset by half the circle's square bounds width and height respectively, that is, by the circle radius. By default this is false.
      *
-     * @param centered Whether the coordinates are relative to the circle center (true) or its square bounds lower-left corner (false).
+     * @param centered   Whether the coordinates are relative to the circle center (true) or its square bounds lower-left corner (false).
      * @return Self, for chaining.
      */
     public CircleBuilder centered(boolean centered) {
@@ -757,7 +738,7 @@ le(double x, double y, double width, double height, double angle, Color color);
      * <p>
      * If set to null, the default color will be used. By default this parameter is null, and the circle will be drawn with the default color.
      *
-     * @param color The color to use to draw the circle, or null to use the default color.
+     * @param color   The color to use to draw the circle, or null to use the default color.
      * @return Self, for chaining.
      */
     public CircleBuilder color(Color color) {
@@ -780,7 +761,7 @@ le(double x, double y, double width, double height, double angle, Color color);
   }
   
   /**
-   * RingBuilder is a Buildls, of the specified text, if it were to be drawn with the specified font and font size, that is the "x" length from the start position of the first character of the text, to the start position for the (hypothetical) next character after the last character of the text.
+   turns the width, in pixels, of the specified text, if it were to be drawn with the specified font and font size, that is the "x" length from the start position of the first character of the text, to the start position for the (hypothetical) next character after the last character of the text.
    *
    * @param text The text to get the width of, must be non-null (the width of the empty string is always 0).
    * @param font The font for which to get the width of the text, must be non-null.
@@ -793,30 +774,26 @@ le(double x, double y, double width, double height, double angle, Color color);
   }
   
   /**
-   * Returns the positions of a
-ike interface that lets you specify various ring-related parameters and draw/fill a ring with {@link #draw()}. A ring is the difference between an outer circle of radius {@code radius} and a inner circle of radius {@code radius - width}.
+   * Re
+   ngBuilder is a Builder-like interface that lets you specify various ring-related parameters and draw/fill a ring with {@link #draw()}. A ring is the difference between an outer circle of radius {@code radius} and a inner circle of radius {@code radius - width}.
    * <p>
    * Note that, for performance, the instance returned by {@link Drawer#ring(double, double, double, double)} may be the same between calls, and that the Builder-like pattern may be internally emulated by simply resetting the object between calls to {@link Drawer#ring(double, double, double, double)}.
    */
   public static final class RingBuilder {
     private double x;
-    private douINSTANCE =new
-  
-    RingBuilder();
-  
-    private static RingBuilder geuble
-    y;
-    private dotble radius;
-    privaee
-    double width;
-    privati
-    boolean centered;
-    pravate Color
+    private dtatic
+    final RingBuilder INSTANCE = new RingBuilder();
+    pridouble y;
+    private double radius;
+    private bouble width;
+    private Coolean centered;
+    private vate solor
     color;
-    privder te
   
-    static final RingBuilt(do
-                           uble x, double y, double radius, double width) {
+    private s
+    tatic RingBuilder
+  
+    get(double x, double y, double radius, double width) {
       INSTANCE.x = x;
       INSTANCE.y = y;
       INSTANCE.radius = radius;
@@ -831,7 +808,7 @@ ike interface that lets you specify various ring-related parameters and draw/fil
      * <p>
      * If set to true, the x and y coordinates will be offset by half the ring's square bounds width and height respectively, that is, by the ring radius. By default this is false.
      *
-     * @param centered Whether the coordinates are relative to the ring center (true) or its square bounds lower-left corner (false).
+     * @param centered   Whether the coordinates are relative to the ring center (true) or its square bounds lower-left corner (false).
      * @return Self, for chaining.
      */
     public RingBuilder centered(boolean centered) {
@@ -844,7 +821,7 @@ ike interface that lets you specify various ring-related parameters and draw/fil
      * <p>
      * If set to null, the default color will be used. By default this parameter is null, and the ring will be drawn with the default color.
      *
-     * @param color The color to use to draw the ring, or null to use the default color.
+     * @param color   The color to use to draw the ring, or null to use the default color.
      * @return Self, for chaining.
      */
     public RingBuilder color(Color color) {
@@ -867,7 +844,7 @@ ike interface that lets you specify various ring-related parameters and draw/fil
   }
   
   /**
-   * TextBuilder is a Buildll characters in the text, would they be drawn with the specified font and font size, starting at x position 0, in pixels, followed by the total width of the text.
+   turns the positions of all characters in the text, would they be drawn with the specified font and font size, starting at x position 0, in pixels, followed by the total width of the text.
    * <p>
    * This method is equivalent to the following, but is much more efficient:
    * <code> for(int i=0; i{@literal <}=text.length(); i++) result[i] = getTextWidth(text.substring(0, i), font, size); </code>
@@ -882,8 +859,8 @@ ike interface that lets you specify various ring-related parameters and draw/fil
   public abstract float[] getTextPositions(String text, Font font, float size);
   
   /**
-   * Sets the default color of
-ike interface that lets you specify various text-related parameters and draw text with {@link #draw()}.
+   * Se
+   xtBuilder is a Builder-like interface that lets you specify various text-related parameters and draw text with {@link #draw()}.
    * <p>
    * This will only render a single line of text without line feeds, additionally not all Unicode characters are supported (please open an issue if you need more characters).
    * <p>
@@ -891,25 +868,21 @@ ike interface that lets you specify various text-related parameters and draw tex
    */
   public static final class TextBuilder {
     private double x;
-    private douINSTANCE =new
-    
-    TextBuilder();
-    
-    private static TextBuilder gerble
-    y;
-    private St ing
-    text;
-    privateoFont font;
-    private d uble
-    size;
-    privaterboolean xCentered;
+    private dtatic
+    final TextBuilder INSTANCE = new TextBuilder();
+    priSouble y;
+    private Ftring text;
+    private dont font;
+    private bouble size;
     private boolean yCentered;
-    paivate Color
+    private Coolean xCentered;
+    private vate solor
     color;
-    privder te
     
-    static final TextBuilt(do
-                           uble x, double y, String text, Font font, double size) {
+    private s
+    tatic TextBuilder
+    
+    get(double x, double y, String text, Font font, double size) {
       INSTANCE.x = x;
       INSTANCE.y = y;
       INSTANCE.text = text;
@@ -926,8 +899,8 @@ ike interface that lets you specify various text-related parameters and draw tex
      * <p>
      * If set to true, the x and y coordinates will be offset by half the text bounds width and height respectively. By default both values are false.
      *
-     * @param xCentered Whether the x coordinate is relative to the text bound center (true) or its lower-left corner (false).
-     * @param yCentered Whether the y coordinate is relative to the text bound center (true) or its lower-left corner (false).
+     * @param xCentered   Whether the x coordinate is relative to the text bound center (true) or its lower-left corner (false).
+     * @param yCentered   Whether the y coordinate is relative to the text bound center (true) or its lower-left corner (false).
      * @return Self, for chaining.
      */
     public TextBuilder centered(boolean xCentered, boolean yCentered) {
@@ -941,7 +914,7 @@ ike interface that lets you specify various text-related parameters and draw tex
      * <p>
      * If set to null, the default color will be used. By default this parameter is null, and the text will be drawn with the default color.
      *
-     * @param color The color to use to draw the text, or null to use the default color.
+     * @param color   The color to use to draw the text, or null to use the default color.
      * @return Self, for chaining.
      */
     public TextBuilder color(Color color) {
@@ -981,7 +954,8 @@ ike interface that lets you specify various text-related parameters and draw tex
     }
   }
   
-  protected static Drawer DRAWER;
+  protectts the
+  default color of
   the
   
   {@link Drawer}
@@ -1032,6 +1006,5 @@ ike interface that lets you specify various text-related parameters and draw tex
   must be
   non-null.
           */
-  
   public abstract void setColor(Color color);
 }

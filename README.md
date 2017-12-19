@@ -3,6 +3,8 @@
 ## Notes
 There has been a slight API change in the new JavaUI version (2.0.0, thanks semantic versioning!), in the Drawer class. Instead of calling e.g. ```drawer.fillRectangle(10, 10, 100, 100, true, 5.0)```, an easier Builder-based approach is used: ```drawer.rectangle(10, 10, 100, 100).centered(true).angle(5.0)```. Please see the new Drawer javadoc, and open an issue if you have any question regarding code migration in this regard.
 
+Due to various issues related to fullscreen windows with GLFW on Mac OS X, windows on Mac OS X will all be windowed (e.g. as if ```fullscreen = false```). This may be fixed when GLFW 3.3 is released and LWJGL includes the updated version.
+
 ## Introduction
 
 JavaUI is a lightweight and fast API for drawing geometric shapes, images, text; rendering a UI with various components and handling input; and decoding and playing back sounds; by internally using lightweight bindings to low-level powerful native libraries: OpenAL and OpenGL.

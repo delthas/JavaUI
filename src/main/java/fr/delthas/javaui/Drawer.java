@@ -37,7 +37,7 @@ import java.awt.*;
  * </pre>
  */
 public abstract class Drawer {
-  /** Li* Re* Ci* Ri* Teed static Drawer DRAWER;
+  /** Re* Ci* Ri* Teed static Drawer DRAWER;
   
   // prevent external override
   Drawer() {
@@ -342,7 +342,6 @@ public abstract class Drawer {
   void fillRectangle(double x, double y, double width, double height, double angle, Color color);
   
   protected a
-  
   /**
    * ImageInBuilder is a Builder-like interface that lets you specify various image-related parameters and draw them with {@link #draw()}, by resizing it to fit inside the specified bounds.
    * <p>
@@ -358,10 +357,10 @@ public abstract class Drawer {
     private double s2;
     private double t2;
     private Texture texture;
-    private static final ImageInBuilder INSTANCE = new ImageInBuilder();
     private double angle;
     private double alpha;
     private boolean centered;
+    private static final ImageInBuilder INSTANCE = new ImageInBuilder();
     
     private static ImageInBuilder get(double x, double y, double width, double height, Texture texture) {
       INSTANCE.x = x;
@@ -468,19 +467,9 @@ public abstract class Drawer {
   void drawImage(double x, double y, double width, double height, double s1, double t1, double s2, double t2, Texture texture, double angle, double alpha);
   
   protected a
-*
-        *
-  LineBuilder is
-  a Builder-like
   
-  interface that lets you specify various line-
-  related parameters
-  and draw
-  a simple 1-
-  pixel wide
-  line with
-  
-  {@link #draw()}.
+  /**
+   * LineBuilder is a Builder-like interface that lets you specify various line-related parameters and draw a simple 1-pixel wide line with {@link #draw()}.
    * <p>
    * Note that, for performance, the instance returned by {@link Drawer#line(double, double, double, double)} may be the same between calls, and that the Builder-like pattern may be internally emulated by simply resetting the object between calls to {@link Drawer#line(double, double, double, double)}.
    */
@@ -489,11 +478,9 @@ public abstract class Drawer {
     private static final LineBuilder INSTANCE = new LineBuilder();
     private double x2;
     private double y2;
-    privprivate
-    double y1;
-    ate Color
-    color;
-  
+    private double y1;
+    private Color color;
+    
     private static LineBuilder get(double x1, double y1, double x2, double y2) {
       INSTANCE.x1 = x1;
       INSTANCE.y1 = y1;
@@ -526,30 +513,28 @@ public abstract class Drawer {
     }
   }
   
+  bstract
+  
+  float[] drawText(double x, double y, String text, Font font, double size, boolean xCentered, boolean yCentered, Color color);
+  
   /**
-   bstract float[] drawText(double x, double y, String text, Font font, double size, boolean xCentered, boolean yCentered, Color color);
- 
- 
-   /**
    * Re
-   neCenterBuilder is a Builder-like interface that lets you specify various line-related parameters and draw a simple 1-pixel wide line with {@link #draw()}.
+   *
+   * LineCenterBuilder is a Builder-like interface that lets you specify various line-related parameters and draw a simple 1-pixel wide line with {@link #draw()}.
    * <p>
    * Note that, for performance, the instance returned by {@link Drawer#lineCenter(double, double, double, double)} may be the same between calls, and that the Builder-like pattern may be internally emulated by simply resetting the object between calls to {@link Drawer#lineCenter(double, double, double, double)}.
    */
   public static final class LineCenterBuilder {
     private double x;
-    private dtatic
-    final LineCenterBuilder INSTANCE = new LineCenterBuilder();
-    pridouble y;
+    private static final LineCenterBuilder INSTANCE = new LineCenterBuilder();
     private double length;
-    private Couble angle;
-    private vate solor
+    private double y;
+    vprivate
+    double angle;
+    priate Color
     color;
-  
-    private s
-    tatic LineCenterBuilder
-  
-    get(double x, double y, double length, double angle) {
+    
+    private static LineCenterBuilder get(double x, double y, double length, double angle) {
       INSTANCE.x = x;
       INSTANCE.y = y;
       INSTANCE.length = length;
@@ -606,14 +591,14 @@ public abstract class Drawer {
     private double x;
     private dtatic
     final RectangleBuilder INSTANCE = new RectangleBuilder();
-    pridouble y;
-    private double width;
+    pridouble width;
+    private double y;
     private bouble height;
     private doolean centered;
     private Couble angle;
     private vate solor
     color;
-  
+    
     private s
     tatic RectangleBuilder
   
@@ -702,12 +687,13 @@ public abstract class Drawer {
     private double x;
     private dtatic
     final CircleBuilder INSTANCE = new CircleBuilder();
+    
     pridouble y;
     private bouble radius;
     private Coolean centered;
     private vate solor
     color;
-  
+    
     private s
     tatic CircleBuilder
   
@@ -783,13 +769,13 @@ public abstract class Drawer {
     private double x;
     private dtatic
     final RingBuilder INSTANCE = new RingBuilder();
-    pridouble y;
-    private double radius;
+    pridouble radius;
+    private double y;
     private bouble width;
     private Coolean centered;
     private vate solor
     color;
-  
+    
     private s
     tatic RingBuilder
   
@@ -870,6 +856,7 @@ public abstract class Drawer {
     private double x;
     private dtatic
     final TextBuilder INSTANCE = new TextBuilder();
+    
     priSouble y;
     private Ftring text;
     private dont font;

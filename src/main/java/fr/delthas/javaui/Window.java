@@ -279,8 +279,9 @@ final class Window extends Drawer {
       glfwDestroyWindow(window);
     }
     glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
-    window = glfwCreateWindow(width, height, title, fullscreen ? glfwGetPrimaryMonitor() : NULL, NULL);
-    
+    if (fullscreen && glfwForceMainThread) { glfwWindowHint(GLFW_FLOATING, GLFW_TRUE); }
+    window = glfwCreateWindow(width, height, title, (fullscreen && !glfwForceMainThread) ? glfwGetPrimaryMonitor() : NULL, NULL);
+  
     if (image != null) {
       if (image.ignoreAlpha) {
         throw new RuntimeException("Image has to contain alpha (do not call ignoreAlpha=true)!");
@@ -636,7 +637,6 @@ final class Window extends Drawer {
       
       STBTTFontinfo info = STBTTFontinfo.malloc();
       stbtt_InitFont(info, fontBuffer.get(font));
-      
       return new FontData(texture, charData, info);
     });
     return lastFontData;

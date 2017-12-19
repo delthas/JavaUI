@@ -94,16 +94,16 @@ public class TextField extends Component {
           selection0 = selectionStart;
           selection1 = selectionEnd;
         }
-        drawer.text(getWidth() / 2 - sizes[length(drawnText) - 1] / 2, getHeight() / 2, drawnText.substring(0, selection0), Font.COMIC, 16).centered(false, true).color(Color.WHITE).draw();
-        drawer.rectangle(getWidth() / 2 - sizes[length(drawnText) - 1] / 2 + (selection0 == 0 ? 0 : sizes[selection0 - 1]), getHeight() / 2 + metrics.getDescent() - (metrics.getDescent() + metrics.getAscent()) / 2, sizes[selection1 - 1] - (selection0 == 0 ? 0 : sizes[selection0 - 1]), metrics.getAscent() - metrics.getDescent()).color(Color.LIGHT_GRAY).draw();
-        drawer.text(getWidth() / 2 - sizes[length(drawnText) - 1] / 2 + (selection0 == 0 ? 0 : sizes[selection0 - 1]), getHeight() / 2, drawnText.substring(selection0, selection1), Font.COMIC, 16).centered(false, true).color(Color.BLACK).draw();
-        drawer.text(getWidth() / 2 - sizes[length(drawnText) - 1] / 2 + sizes[selection1 - 1], getHeight() / 2, drawnText.substring(selection1), Font.COMIC, 16).centered(false, true).color(Color.WHITE).draw();
+        drawer.text(getWidth() / 2 - sizes[length(drawnText)] / 2, getHeight() / 2, drawnText.substring(0, selection0), Font.COMIC, 16).centered(false, true).color(Color.WHITE).draw();
+        drawer.rectangle(getWidth() / 2 - sizes[length(drawnText)] / 2 + sizes[selection0], getHeight() / 2 + metrics.getDescent() - (metrics.getDescent() + metrics.getAscent()) / 2, sizes[selection1] - sizes[selection0], metrics.getAscent() - metrics.getDescent()).color(Color.LIGHT_GRAY).draw();
+        drawer.text(getWidth() / 2 - sizes[length(drawnText)] / 2 + sizes[selection0], getHeight() / 2, drawnText.substring(selection0, selection1), Font.COMIC, 16).centered(false, true).color(Color.BLACK).draw();
+        drawer.text(getWidth() / 2 - sizes[length(drawnText)] / 2 + sizes[selection1], getHeight() / 2, drawnText.substring(selection1), Font.COMIC, 16).centered(false, true).color(Color.WHITE).draw();
       } else {
         drawer.text(getWidth() / 2, getHeight() / 2, drawnText, Font.COMIC, 16).centered(true, true).color(Color.WHITE).draw();
       }
     }
     if (isInBounds(inputState.getMouseX(this), inputState.getMouseY(this))) {
-      float position = (float) (drawnText.isEmpty() ? getWidth() / 2 : getWidth() / 2 - sizes[length(drawnText) - 1] / 2 + (caretPosition == 0 ? 0 : sizes[caretPosition - 1]));
+      float position = (float) (drawnText.isEmpty() ? getWidth() / 2 : getWidth() / 2 - sizes[length(drawnText)] / 2 + sizes[caretPosition]);
       drawer.rectangle(position - 1, getHeight() / 2 + metrics.getDescent() - (metrics.getDescent() + metrics.getAscent()) / 2, 1, metrics.getAscent() - metrics.getDescent()).color(Color.GRAY).draw();
     }
   }
@@ -272,11 +272,8 @@ public class TextField extends Component {
     if (drawnText.isEmpty()) {
       return 0;
     }
-    if (x < sizes[0] / 2 + getWidth() / 2 - sizes[length(drawnText) - 1] / 2) {
-      return 0;
-    }
-    for (int i = 1; i < length(drawnText); i++) {
-      if (x < (sizes[i] + sizes[i - 1]) / 2 + getWidth() / 2 - sizes[length(drawnText) - 1] / 2) {
+    for (int i = 0; i < length(drawnText); i++) {
+      if (x < (sizes[i + 1] + sizes[i]) / 2 + getWidth() / 2 - sizes[length(drawnText)] / 2) {
         return i;
       }
     }

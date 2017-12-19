@@ -37,7 +37,652 @@ import java.awt.*;
  * </pre>
  */
 public abstract class Drawer {
-  /** Re* Ci* Ri* Teed static Drawer DRAWER;
+  
+  /**
+   * ImageBuilder is a Builder-like interface that lets you specify various image-related parameters and draw an image with {@link #draw()}.
+   * <p>
+   * Note that, for performance, the instance returned by {@link Drawer#image(double, double, Texture)} may be the same between calls, and that the Builder-like pattern may be internally emulated by simply resetting the object between calls to {@link Drawer#image(double, double, Texture)}.
+   */
+  public static final class ImageBuilder {
+    private double x;
+    private double y;
+    private double width;
+    private double height;
+    private double s1;
+    private double t1;
+    private double s2;
+    private double t2;
+    private Texture texture;
+    private double angle;
+    private double alpha;
+    private boolean centered;
+    
+    private static final ImageBuilder INSTANCE = new ImageBuilder();
+    
+    private static ImageBuilder get(double x, double y, Texture texture) {
+      INSTANCE.x = x;
+      INSTANCE.y = y;
+      INSTANCE.width = texture.getWidth();
+      INSTANCE.height = texture.getHeight();
+      INSTANCE.s1 = 0;
+      INSTANCE.t1 = 0;
+      INSTANCE.s2 = texture.getWidth();
+      INSTANCE.t2 = texture.getHeight();
+      INSTANCE.texture = texture;
+      INSTANCE.angle = 0;
+      INSTANCE.alpha = 1;
+      INSTANCE.centered = false;
+      return INSTANCE;
+    }
+    
+    /**
+     * Sets the size of the (resized) image to be drawn.
+     * <p>
+     * Calling this method will resize the image to fit exactly the specified width and height, <b>NOT keeping the aspect ratio</b>. By default this is set to the width and height of the texture, e.g. {@code width = texture.getWidth(); height = texture.getHeight()}.
+     *
+     * @param width The width of the resized image.
+     * @param height The height of the resized image.
+     * @return Self, for chaining.
+     */
+    public ImageBuilder size(double width, double height) {
+      this.width = width;
+      this.height = height;
+      return this;
+    }
+    
+    /**
+     * Sets the part of the image to be drawn.
+     * <p>
+     * The part of the image that will be drawn is specified by two points, that are the lower-left corner of the image part rectangle, in image pixels, relative to its lower-left corner, and the upper-right corner of the rectangle, also relative to the image lower-left corner.
+     * <p>
+     * If the image is to be resized using {@link #size(double, double)}, the image <p>part</p> will be resized, so that the image part resized width and image part resized height are exactly those of the specified width and height.
+     *
+     * @param s1      The x coordinate of the lower-left corner of the image part, relative to the lower-left corner of the image (not adujsted by the translation stack).
+     * @param t1      The y coordinate of the lower-left corner of the image part, relative to the lower-left corner of the image (not adujsted by the translation stack).
+     * @param s2      The x coordinate of the upper-right corner of the image part, relative to the lower-left corner of the image (not adujsted by the translation stack).
+     * @param t2      The y coordinate of the upper-right corner of the image part, relative to the lower-left corner of the image (not adujsted by the translation stack).
+     * @return Self, for chaining.
+     */
+    public ImageBuilder texCoords(double s1, double t1, double s2, double t2) {
+      this.s1 = s1;
+      this.t1 = t1;
+      this.s2 = s2;
+      this.t2 = t2;
+      return this;
+    }
+    
+    /**
+     * Sets the angle of the image to be drawn.
+     * <p>
+     * The image will be rotated with the postivie (counter-clockwise) angle specified, in radians. By default the image will not be resized, e.g. {@code angle = 0.0}.
+     *
+     * @param angle   The positive angle (counter-clockwise) of the image to draw, in radians.
+     * @return Self, for chaining.
+     */
+    public ImageBuilder angle(double angle) {
+      this.angle = angle;
+      return this;
+    }
+    
+    /**
+     * Sets the alpha coefficient of the image to be drawn.
+     * <p>
+     * The image alpha will be multiplied by the specified coefficient, 0.0 meaning full transparency, 1.0 meaning full opacity. By default the image will be unchanged regarding trasparency, e.g. {@code alpha = 1.0}.
+     *
+     * @param alpha   The alpha coefficient to multiply the image alpha by, between 0.0 (full transparency), and 1.0 (full opacity).
+     * @return Self, for chaining.
+     */
+    public ImageBuilder alpha(double alpha) {
+      this.alpha = alpha;
+      return this;
+    }
+    
+    /**
+     * Sets whether the specified x/y coordinates are relative to the image center (true), or to the image lower-left corner (false).
+     * <p>
+     * If set to true, the x and y coordinates will be offset by half the (resized) image width and height respectively. By default this is false.
+     *
+     * @param centered   Whether the coordinates are relative to the image center (true) or its lower-left corner (false).
+     * @return Self, for chaining.
+     */
+    public ImageBuilder centered(boolean centered) {
+      this.centered = centered;
+      return this;
+    }
+    
+    /**
+     * Draw the image, with the specified information passed in previous Builder calls.
+     * <p>
+     * To draw another image, call {@link Drawer#image(double, double, Texture)} again.
+     */
+    public void draw() {
+      if (centered) {
+        DRAWER.drawImage(x, y, width, height, s1, t1, s2, t2, texture, angle, alpha);
+      } else {
+        DRAWER.drawImage(x + width / 2, y + height / 2, width, height, s1, t1, s2, t2, texture, angle, alpha);
+      }
+    }
+  }
+  
+  /**
+   * ImageInBuilder is a Builder-like interface that lets you specify various image-related parameters and draw them with {@link #draw()}, by resizing it to fit inside the specified bounds.
+   * <p>
+   * Note that, for performance, the instance returned by {@link Drawer#imageIn(double, double, double, double, Texture)} may be the same between calls, and that the Builder-like pattern may be internally emulated by simply resetting the object between calls to {@link Drawer#imageIn(double, double, double, double, Texture)}.
+   */
+  public static final class ImageInBuilder {
+    private double x;
+    private double y;
+    private double width;
+    private double height;
+    private double s1;
+    private double t1;
+    private double s2;
+    private double t2;
+    private Texture texture;
+    private double angle;
+    private double alpha;
+    private boolean centered;
+    
+    private static final ImageInBuilder INSTANCE = new ImageInBuilder();
+    
+    private static ImageInBuilder get(double x, double y, double width, double height, Texture texture) {
+      INSTANCE.x = x;
+      INSTANCE.y = y;
+      INSTANCE.width = width;
+      INSTANCE.height = height;
+      INSTANCE.s1 = 0;
+      INSTANCE.t1 = 0;
+      INSTANCE.s2 = texture.getWidth();
+      INSTANCE.t2 = texture.getHeight();
+      INSTANCE.texture = texture;
+      INSTANCE.angle = 0;
+      INSTANCE.alpha = 1;
+      INSTANCE.centered = false;
+      return INSTANCE;
+    }
+    
+    /**
+     * Sets the part of the image to be drawn.
+     * <p>
+     * The part of the image that will be drawn is specified by two points, that are the lower-left corner of the image part rectangle, in image pixels, relative to its lower-left corner, and the upper-right corner of the rectangle, also relative to the image lower-left corner.
+     * <p>
+     * The image <p>part</p> will be resized to fit the bounds, so that the image part resized width and image part resized height will fit the bounds.
+     *
+     * @param s1      The x coordinate of the lower-left corner of the image part, relative to the lower-left corner of the image (not adujsted by the translation stack).
+     * @param t1      The y coordinate of the lower-left corner of the image part, relative to the lower-left corner of the image (not adujsted by the translation stack).
+     * @param s2      The x coordinate of the upper-right corner of the image part, relative to the lower-left corner of the image (not adujsted by the translation stack).
+     * @param t2      The y coordinate of the upper-right corner of the image part, relative to the lower-left corner of the image (not adujsted by the translation stack).
+     * @return Self, for chaining.
+     */
+    public ImageInBuilder texCoords(double s1, double t1, double s2, double t2) {
+      this.s1 = s1;
+      this.t1 = t1;
+      this.s2 = s2;
+      this.t2 = t2;
+      return this;
+    }
+    
+    /**
+     * Sets the angle of the image to be drawn.
+     * <p>
+     * The image will be rotated with the postivie (counter-clockwise) angle specified, in radians. By default the image will not be resized, e.g. {@code angle = 0.0}.
+     *
+     * @param angle   The positive angle (counter-clockwise) of the image to draw, in radians.
+     * @return Self, for chaining.
+     */
+    public ImageInBuilder angle(double angle) {
+      this.angle = angle;
+      return this;
+    }
+    
+    /**
+     * Sets the alpha coefficient of the image to be drawn.
+     * <p>
+     * The image alpha will be multiplied by the specified coefficient, 0.0 meaning full transparency, 1.0 meaning full opacity. By default the image will be unchanged regarding trasparency, e.g. {@code alpha = 1.0}.
+     *
+     * @param alpha   The alpha coefficient to multiply the image alpha by, between 0.0 (full transparency), and 1.0 (full opacity).
+     * @return Self, for chaining.
+     */
+    public ImageInBuilder alpha(double alpha) {
+      this.alpha = alpha;
+      return this;
+    }
+    
+    /**
+     * Sets whether the specified x/y coordinates are relative to the <b>bounds</b> center (true), or to the <b>bounds</b> lower-left corner (false).
+     * <p>
+     * If set to true, the x and y coordinates will be offset by half the <b>bounds</b> width and height respectively. By default this is false.
+     *
+     * @param centered   Whether the coordinates are relative to the <b>bounds</b> center (true) or its lower-left corner (false).
+     * @return Self, for chaining.
+     */
+    public ImageInBuilder centered(boolean centered) {
+      this.centered = centered;
+      return this;
+    }
+    
+    /**
+     * Draw the image, with the specified information passed in previous Builder calls.
+     * <p>
+     * To draw another image, call {@link Drawer#imageIn(double, double, double, double, Texture)} again.
+     */
+    public void draw() {
+      double widthRatio = texture.getWidth() / width;
+      double heightRatio = texture.getHeight() / height;
+      if (widthRatio > heightRatio) {
+        if (centered) {
+          DRAWER.drawImage(x + width / 2, y + height / 2, width, texture.getHeight() / widthRatio, s1, t1, s2, t2, texture, angle, alpha);
+        } else {
+          DRAWER.drawImage(x, y, width, texture.getHeight() / widthRatio, s1, t1, s2, t2, texture, angle, alpha);
+        }
+      } else {
+        if (centered) {
+          DRAWER.drawImage(x + width / 2, y + height / 2, texture.getWidth() / heightRatio, height, s1, t1, s2, t2, texture, angle, alpha);
+        } else {
+          DRAWER.drawImage(x, y, texture.getWidth() / heightRatio, height, s1, t1, s2, t2, texture, angle, alpha);
+        }
+      }
+    }
+    
+  }
+  
+  /**
+   * LineBuilder is a Builder-like interface that lets you specify various line-related parameters and draw a simple 1-pixel wide line with {@link #draw()}.
+   * <p>
+   * Note that, for performance, the instance returned by {@link Drawer#line(double, double, double, double)} may be the same between calls, and that the Builder-like pattern may be internally emulated by simply resetting the object between calls to {@link Drawer#line(double, double, double, double)}.
+   */
+  public static final class LineBuilder {
+    private double x1;
+    private double y1;
+    private double x2;
+    private double y2;
+    private Color color;
+    
+    private static final LineBuilder INSTANCE = new LineBuilder();
+    
+    private static LineBuilder get(double x1, double y1, double x2, double y2) {
+      INSTANCE.x1 = x1;
+      INSTANCE.y1 = y1;
+      INSTANCE.x2 = x2;
+      INSTANCE.y2 = y2;
+      INSTANCE.color = null;
+      return INSTANCE;
+    }
+    
+    /**
+     * Sets the color of the line to be drawn.
+     * <p>
+     * If set to null, the default color will be used. By default this parameter is null, and the line will be drawn with the default color.
+     *
+     * @param color   The color to use to draw the line, or null to use the default color.
+     * @return Self, for chaining.
+     */
+    public LineBuilder color(Color color) {
+      this.color = color;
+      return this;
+    }
+    
+    /**
+     * Draw the line, with the specified information passed in previous Builder calls.
+     * <p>
+     * To draw another line, call {@link Drawer#line(double, double, double, double)} again.
+     */
+    public void draw() {
+      DRAWER.drawLineCenter((x1 + x2) / 2, (y1 + y2) / 2, Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)), Math.atan2(y2 - y1, x2 - x1), color);
+    }
+    
+  }
+  
+  /**
+   * LineCenterBuilder is a Builder-like interface that lets you specify various line-related parameters and draw a simple 1-pixel wide line with {@link #draw()}.
+   * <p>
+   * Note that, for performance, the instance returned by {@link Drawer#lineCenter(double, double, double, double)} may be the same between calls, and that the Builder-like pattern may be internally emulated by simply resetting the object between calls to {@link Drawer#lineCenter(double, double, double, double)}.
+   */
+  public static final class LineCenterBuilder {
+    private double x;
+    private double y;
+    private double length;
+    private double angle;
+    private Color color;
+    
+    private static final LineCenterBuilder INSTANCE = new LineCenterBuilder();
+    
+    private static LineCenterBuilder get(double x, double y, double length, double angle) {
+      INSTANCE.x = x;
+      INSTANCE.y = y;
+      INSTANCE.length = length;
+      INSTANCE.angle = angle;
+      INSTANCE.color = null;
+      return INSTANCE;
+    }
+    
+    /**
+     * Sets the color of the line to be drawn.
+     * <p>
+     * If set to null, the default color will be used. By default this parameter is null, and the line will be drawn with the default color.
+     *
+     * @param color   The color to use to draw the line, or null to use the default color.
+     * @return Self, for chaining.
+     */
+    public LineCenterBuilder color(Color color) {
+      this.color = color;
+      return this;
+    }
+    
+    /**
+     * Draw the line, with the specified information passed in previous Builder calls.
+     * <p>
+     * To draw another line, call {@link Drawer#lineCenter(double, double, double, double)} again.
+     */
+    public void draw() {
+      DRAWER.drawLineCenter(x, y, length, angle, color);
+    }
+  }
+  
+  /**
+   * RectangleBuilder is a Builder-like interface that lets you specify various rectangle-related parameters and draw/fill a rectangle with {@link #draw()}.
+   * <p>
+   * Note that, for performance, the instance returned by {@link Drawer#rectangle(double, double, double, double)} may be the same between calls, and that the Builder-like pattern may be internally emulated by simply resetting the object between calls to {@link Drawer#rectangle(double, double, double, double)}.
+   */
+  public static final class RectangleBuilder {
+    private double x;
+    private double y;
+    private double width;
+    private double height;
+    private boolean centered;
+    private double angle;
+    private Color color;
+    
+    private static final RectangleBuilder INSTANCE = new RectangleBuilder();
+    
+    private static RectangleBuilder get(double x, double y, double width, double height) {
+      INSTANCE.x = x;
+      INSTANCE.y = y;
+      INSTANCE.width = width;
+      INSTANCE.height = height;
+      INSTANCE.centered = false;
+      INSTANCE.angle = 0;
+      INSTANCE.color = null;
+      return INSTANCE;
+    }
+    
+    /**
+     * Sets whether the specified x/y coordinates are relative to the rectangle center (true), or to the rectangle lower-left corner (false).
+     * <p>
+     * If set to true, the x and y coordinates will be offset by half the rectangle width and height respectively. By default this is false.
+     *
+     * @param centered   Whether the coordinates are relative to the rectangle center (true) or its lower-left corner (false).
+     * @return Self, for chaining.
+     */
+    public RectangleBuilder centered(boolean centered) {
+      this.centered = centered;
+      return this;
+    }
+    
+    /**
+     * Sets the angle of the rectangle to be drawn.
+     * <p>
+     * The rectangle will be rotated with the postivie (counter-clockwise) angle specified, in radians. By default the rectangle will not be resized, e.g. {@code angle = 0.0}.
+     *
+     * @param angle   The positive angle (counter-clockwise) of the rectangle to draw, in radians.
+     * @return Self, for chaining.
+     */
+    public RectangleBuilder angle(double angle) {
+      this.angle = angle;
+      return this;
+    }
+    
+    /**
+     * Sets the color of the rectangle to be drawn.
+     * <p>
+     * If set to null, the default color will be used. By default this parameter is null, and the rectangle will be drawn with the default color.
+     *
+     * @param color   The color to use to draw the rectangle, or null to use the default color.
+     * @return Self, for chaining.
+     */
+    public RectangleBuilder color(Color color) {
+      this.color = color;
+      return this;
+    }
+    
+    /**
+     * Draw the rectangle, with the specified information passed in previous Builder calls.
+     * <p>
+     * To draw another rectangle, call {@link Drawer#rectangle(double, double, double, double)} again.
+     */
+    public void draw() {
+      if (centered) {
+        DRAWER.fillRectangle(x, y, width, height, angle, color);
+      } else {
+        DRAWER.fillRectangle(x + width / 2, y + height / 2, width, height, angle, color);
+      }
+    }
+    
+  }
+  
+  /**
+   * CircleBuilder is a Builder-like interface that lets you specify various circle-related parameters and draw/fill a circle with {@link #draw()}.
+   * <p>
+   * Note that, for performance, the instance returned by {@link Drawer#circle(double, double, double)} may be the same between calls, and that the Builder-like pattern may be internally emulated by simply resetting the object between calls to {@link Drawer#circle(double, double, double)}.
+   */
+  public static final class CircleBuilder {
+    private double x;
+    private double y;
+    private double radius;
+    private boolean centered;
+    private Color color;
+    
+    private static final CircleBuilder INSTANCE = new CircleBuilder();
+    
+    private static CircleBuilder get(double x, double y, double radius) {
+      INSTANCE.x = x;
+      INSTANCE.y = y;
+      INSTANCE.radius = radius;
+      INSTANCE.centered = false;
+      INSTANCE.color = null;
+      return INSTANCE;
+    }
+    
+    /**
+     * Sets whether the specified x/y coordinates are relative to the circle center (true), or to the circle's square bounds lower-left corner (false).
+     * <p>
+     * If set to true, the x and y coordinates will be offset by half the circle's square bounds width and height respectively, that is, by the circle radius. By default this is false.
+     *
+     * @param centered   Whether the coordinates are relative to the circle center (true) or its square bounds lower-left corner (false).
+     * @return Self, for chaining.
+     */
+    public CircleBuilder centered(boolean centered) {
+      this.centered = centered;
+      return this;
+    }
+    
+    /**
+     * Sets the color of the circle to be drawn.
+     * <p>
+     * If set to null, the default color will be used. By default this parameter is null, and the circle will be drawn with the default color.
+     *
+     * @param color   The color to use to draw the circle, or null to use the default color.
+     * @return Self, for chaining.
+     */
+    public CircleBuilder color(Color color) {
+      this.color = color;
+      return this;
+    }
+    
+    /**
+     * Draw the circle, with the specified information passed in previous Builder calls.
+     * <p>
+     * To draw another circle, call {@link Drawer#circle(double, double, double)} again.
+     */
+    public void draw() {
+      if (centered) {
+        DRAWER.fillRing(x, y, radius, 0, color);
+      } else {
+        DRAWER.fillRing(x + radius / 2, y + radius / 2, radius, 0, color);
+      }
+    }
+    
+  }
+  
+  /**
+   * RingBuilder is a Builder-like interface that lets you specify various ring-related parameters and draw/fill a ring with {@link #draw()}. A ring is the difference between an outer circle of radius {@code radius} and a inner circle of radius {@code radius - width}.
+   * <p>
+   * Note that, for performance, the instance returned by {@link Drawer#ring(double, double, double, double)} may be the same between calls, and that the Builder-like pattern may be internally emulated by simply resetting the object between calls to {@link Drawer#ring(double, double, double, double)}.
+   */
+  public static final class RingBuilder {
+    private double x;
+    private double y;
+    private double radius;
+    private double width;
+    private boolean centered;
+    private Color color;
+    
+    private static final RingBuilder INSTANCE = new RingBuilder();
+    
+    private static RingBuilder get(double x, double y, double radius, double width) {
+      INSTANCE.x = x;
+      INSTANCE.y = y;
+      INSTANCE.radius = radius;
+      INSTANCE.width = width;
+      INSTANCE.centered = false;
+      INSTANCE.color = null;
+      return INSTANCE;
+    }
+    
+    /**
+     * Sets whether the specified x/y coordinates are relative to the ring center (true), or to the ring's square bounds lower-left corner (false).
+     * <p>
+     * If set to true, the x and y coordinates will be offset by half the ring's square bounds width and height respectively, that is, by the ring radius. By default this is false.
+     *
+     * @param centered   Whether the coordinates are relative to the ring center (true) or its square bounds lower-left corner (false).
+     * @return Self, for chaining.
+     */
+    public RingBuilder centered(boolean centered) {
+      this.centered = centered;
+      return this;
+    }
+    
+    /**
+     * Sets the color of the ring to be drawn.
+     * <p>
+     * If set to null, the default color will be used. By default this parameter is null, and the ring will be drawn with the default color.
+     *
+     * @param color   The color to use to draw the ring, or null to use the default color.
+     * @return Self, for chaining.
+     */
+    public RingBuilder color(Color color) {
+      this.color = color;
+      return this;
+    }
+    
+    /**
+     * Draw the ring, with the specified information passed in previous Builder calls.
+     * <p>
+     * To draw another ring, call {@link Drawer#ring(double, double, double, double)} again.
+     */
+    public void draw() {
+      if (centered) {
+        DRAWER.fillRing(x, y, radius, width, color);
+      } else {
+        DRAWER.fillRing(x + radius / 2, y + radius / 2, radius, width, color);
+      }
+    }
+    
+  }
+  
+  /**
+   * TextBuilder is a Builder-like interface that lets you specify various text-related parameters and draw text with {@link #draw()}.
+   * <p>
+   * This will only render a single line of text without line feeds, additionally not all Unicode characters are supported (please open an issue if you need more characters).
+   * <p>
+   * Note that, for performance, the instance returned by {@link Drawer#text(double, double, String, Font, double)} may be the same between calls, and that the Builder-like pattern may be internally emulated by simply resetting the object between calls to {@link Drawer#text(double, double, String, Font, double)}.
+   */
+  public static final class TextBuilder {
+    private double x;
+    private double y;
+    private String text;
+    private Font font;
+    private double size;
+    private boolean xCentered;
+    private boolean yCentered;
+    private Color color;
+    
+    private static final TextBuilder INSTANCE = new TextBuilder();
+    
+    private static TextBuilder get(double x, double y, String text, Font font, double size) {
+      INSTANCE.x = x;
+      INSTANCE.y = y;
+      INSTANCE.text = text;
+      INSTANCE.font = font;
+      INSTANCE.size = size;
+      INSTANCE.xCentered = false;
+      INSTANCE.yCentered = false;
+      INSTANCE.color = null;
+      return INSTANCE;
+    }
+    
+    /**
+     * Sets whether the specified x and y coordinates are relative to the text bounds center (true) (width and height respectively), or to the text bounds lower-left corner (false) (width and height respectively).
+     * <p>
+     * If set to true, the x and y coordinates will be offset by half the text bounds width and height respectively. By default both values are false.
+     *
+     * @param xCentered   Whether the x coordinate is relative to the text bound center (true) or its lower-left corner (false).
+     * @param yCentered   Whether the y coordinate is relative to the text bound center (true) or its lower-left corner (false).
+     * @return Self, for chaining.
+     */
+    public TextBuilder centered(boolean xCentered, boolean yCentered) {
+      this.xCentered = xCentered;
+      this.yCentered = yCentered;
+      return this;
+    }
+    
+    /**
+     * Sets the color of the text to be drawn.
+     * <p>
+     * If set to null, the default color will be used. By default this parameter is null, and the text will be drawn with the default color.
+     *
+     * @param color   The color to use to draw the text, or null to use the default color.
+     * @return Self, for chaining.
+     */
+    public TextBuilder color(Color color) {
+      this.color = color;
+      return this;
+    }
+    
+    /**
+     * Draws the text, with the specified information passed in previous Builder calls, and returns the positions of all characters in the text, followed by the text bounds width.
+     * <p>
+     * If only the total width of the drawn text is needed, use {@link #getTextWidth(String, Font, float)}. It is more efficient to use this method to draw text and get the drawn characters positions in one go than running {@link #draw()} then {@link #getTextPositions(String, Font, float)}.
+     * <p>
+     * The total width of all drawn characters can be obtained by getting the last element of the array, or 0 if it is empty.
+     * <p>
+     * To draw another text, call {@link Drawer#text(double, double, String, Font, double)} again.
+     *
+     * @return The positions of all characters in the text, followed by the total width of the text, in pixels, as an array of {@code text.length() + 1} numbers, as if returned by {@link Drawer#getTextPositions(String, Font, float)}.
+     * @see #draw()
+     */
+    public float[] drawGetPositions() {
+      return DRAWER.drawText(x, y, text, font, size, xCentered, yCentered, color);
+    }
+    
+    /**
+     * Draws the text, with the specified information passed in previous Builder calls, and returns how much to advance the x position (the text bounds width).
+     * <p>
+     * To draw another text, call {@link Drawer#text(double, double, String, Font, double)} again.
+     * <p>
+     * You may use {@link #drawGetPositions()} to efficiently get the x offset of all the characters that were drawn instead of the total text bounds width.
+     *
+     * @return The text bounds width, that is how much to advance the x position, if drawing some text just after the one that was drawn.
+     * @see #drawGetPositions()
+     */
+    public float draw() {
+      float[] positions = drawGetPositions();
+      return positions[positions.length - 1];
+    }
+    
+  }
+  
+  protected static Drawer DRAWER;
   
   // prevent external override
   Drawer() {
@@ -211,363 +856,15 @@ public abstract class Drawer {
   
   protected abstract void fillRing(double x, double y, double radius, double width, Color color);
   
-  protected a
-  /**
-   * ImageBuilder is a Builder-like interface that lets you specify various image-related parameters and draw an image with {@link #draw()}.
-   * <p>
-   * Note that, for performance, the instance returned by {@link Drawer#image(double, double, Texture)} may be the same between calls, and that the Builder-like pattern may be internally emulated by simply resetting the object between calls to {@link Drawer#image(double, double, Texture)}.
-   */
-  public static final class ImageBuilder {
-    private double x;
-    private double y;
-    private double width;
-    private double height;
-    private double s1;
-    private double t1;
-    private double s2;
-    private double t2;
-    private Texture texture;
-    private double angle;
-    private double alpha;
-    private boolean centered;
-    private static final ImageBuilder INSTANCE = new ImageBuilder();
-    
-    private static ImageBuilder get(double x, double y, Texture texture) {
-      INSTANCE.x = x;
-      INSTANCE.y = y;
-      INSTANCE.width = texture.getWidth();
-      INSTANCE.height = texture.getHeight();
-      INSTANCE.s1 = 0;
-      INSTANCE.t1 = 0;
-      INSTANCE.s2 = texture.getWidth();
-      INSTANCE.t2 = texture.getHeight();
-      INSTANCE.texture = texture;
-      INSTANCE.angle = 0;
-      INSTANCE.alpha = 1;
-      INSTANCE.centered = false;
-      return INSTANCE;
-    }
-    
-    /**
-     * Sets the size of the (resized) image to be drawn.
-     * <p>
-     * Calling this method will resize the image to fit exactly the specified width and height, <b>NOT keeping the aspect ratio</b>. By default this is set to the width and height of the texture, e.g. {@code width = texture.getWidth(); height = texture.getHeight()}.
-     *
-     * @param width The width of the resized image.
-     * @param height The height of the resized image.
-     * @return Self, for chaining.
-     */
-    public ImageBuilder size(double width, double height) {
-      this.width = width;
-      this.height = height;
-      return this;
-    }
-    
-    /**
-     * Sets the part of the image to be drawn.
-     * <p>
-     * The part of the image that will be drawn is specified by two points, that are the lower-left corner of the image part rectangle, in image pixels, relative to its lower-left corner, and the upper-right corner of the rectangle, also relative to the image lower-left corner.
-     * <p>
-     * If the image is to be resized using {@link #size(double, double)}, the image <p>part</p> will be resized, so that the image part resized width and image part resized height are exactly those of the specified width and height.
-     *
-     * @param s1      The x coordinate of the lower-left corner of the image part, relative to the lower-left corner of the image (not adujsted by the translation stack).
-     * @param t1      The y coordinate of the lower-left corner of the image part, relative to the lower-left corner of the image (not adujsted by the translation stack).
-     * @param s2      The x coordinate of the upper-right corner of the image part, relative to the lower-left corner of the image (not adujsted by the translation stack).
-     * @param t2      The y coordinate of the upper-right corner of the image part, relative to the lower-left corner of the image (not adujsted by the translation stack).
-     * @return Self, for chaining.
-     */
-    public ImageBuilder texCoords(double s1, double t1, double s2, double t2) {
-      this.s1 = s1;
-      this.t1 = t1;
-      this.s2 = s2;
-      this.t2 = t2;
-      return this;
-    }
-    
-    /**
-     * Sets the angle of the image to be drawn.
-     * <p>
-     * The image will be rotated with the postivie (counter-clockwise) angle specified, in radians. By default the image will not be resized, e.g. {@code angle = 0.0}.
-     *
-     * @param angle   The positive angle (counter-clockwise) of the image to draw, in radians.
-     * @return Self, for chaining.
-     */
-    public ImageBuilder angle(double angle) {
-      this.angle = angle;
-      return this;
-    }
-    
-    /**
-     * Sets the alpha coefficient of the image to be drawn.
-     * <p>
-     * The image alpha will be multiplied by the specified coefficient, 0.0 meaning full transparency, 1.0 meaning full opacity. By default the image will be unchanged regarding trasparency, e.g. {@code alpha = 1.0}.
-     *
-     * @param alpha   The alpha coefficient to multiply the image alpha by, between 0.0 (full transparency), and 1.0 (full opacity).
-     * @return Self, for chaining.
-     */
-    public ImageBuilder alpha(double alpha) {
-      this.alpha = alpha;
-      return this;
-    }
-    
-    /**
-     * Sets whether the specified x/y coordinates are relative to the image center (true), or to the image lower-left corner (false).
-     * <p>
-     * If set to true, the x and y coordinates will be offset by half the (resized) image width and height respectively. By default this is false.
-     *
-     * @param centered   Whether the coordinates are relative to the image center (true) or its lower-left corner (false).
-     * @return Self, for chaining.
-     */
-    public ImageBuilder centered(boolean centered) {
-      this.centered = centered;
-      return this;
-    }
-    
-    /**
-     * Draw the image, with the specified information passed in previous Builder calls.
-     * <p>
-     * To draw another image, call {@link Drawer#image(double, double, Texture)} again.
-     */
-    public void draw() {
-      if (centered) {
-        DRAWER.drawImage(x, y, width, height, s1, t1, s2, t2, texture, angle, alpha);
-      } else {
-        DRAWER.drawImage(x + width / 2, y + height / 2, width, height, s1, t1, s2, t2, texture, angle, alpha);
-      }
-    }
-  }
+  protected abstract void fillRectangle(double x, double y, double width, double height, double angle, Color color);
   
-  bstract
+  protected abstract void drawImage(double x, double y, double width, double height, double s1, double t1, double s2, double t2, Texture texture, double angle, double alpha);
   
-  void fillRectangle(double x, double y, double width, double height, double angle, Color color);
+  protected abstract float[] drawText(double x, double y, String text, Font font, double size, boolean xCentered, boolean yCentered, Color color);
   
-  protected a
-  /**
-   * ImageInBuilder is a Builder-like interface that lets you specify various image-related parameters and draw them with {@link #draw()}, by resizing it to fit inside the specified bounds.
-   * <p>
-   * Note that, for performance, the instance returned by {@link Drawer#imageIn(double, double, double, double, Texture)} may be the same between calls, and that the Builder-like pattern may be internally emulated by simply resetting the object between calls to {@link Drawer#imageIn(double, double, double, double, Texture)}.
-   */
-  public static final class ImageInBuilder {
-    private double x;
-    private double y;
-    private double width;
-    private double height;
-    private double s1;
-    private double t1;
-    private double s2;
-    private double t2;
-    private Texture texture;
-    private double angle;
-    private double alpha;
-    private boolean centered;
-    private static final ImageInBuilder INSTANCE = new ImageInBuilder();
-    
-    private static ImageInBuilder get(double x, double y, double width, double height, Texture texture) {
-      INSTANCE.x = x;
-      INSTANCE.y = y;
-      INSTANCE.width = width;
-      INSTANCE.height = height;
-      INSTANCE.s1 = 0;
-      INSTANCE.t1 = 0;
-      INSTANCE.s2 = texture.getWidth();
-      INSTANCE.t2 = texture.getHeight();
-      INSTANCE.texture = texture;
-      INSTANCE.angle = 0;
-      INSTANCE.alpha = 1;
-      INSTANCE.centered = false;
-      return INSTANCE;
-    }
-    
-    /**
-     * Sets the part of the image to be drawn.
-     * <p>
-     * The part of the image that will be drawn is specified by two points, that are the lower-left corner of the image part rectangle, in image pixels, relative to its lower-left corner, and the upper-right corner of the rectangle, also relative to the image lower-left corner.
-     * <p>
-     * The image <p>part</p> will be resized to fit the bounds, so that the image part resized width and image part resized height will fit the bounds.
-     *
-     * @param s1      The x coordinate of the lower-left corner of the image part, relative to the lower-left corner of the image (not adujsted by the translation stack).
-     * @param t1      The y coordinate of the lower-left corner of the image part, relative to the lower-left corner of the image (not adujsted by the translation stack).
-     * @param s2      The x coordinate of the upper-right corner of the image part, relative to the lower-left corner of the image (not adujsted by the translation stack).
-     * @param t2      The y coordinate of the upper-right corner of the image part, relative to the lower-left corner of the image (not adujsted by the translation stack).
-     * @return Self, for chaining.
-     */
-    public ImageInBuilder texCoords(double s1, double t1, double s2, double t2) {
-      this.s1 = s1;
-      this.t1 = t1;
-      this.s2 = s2;
-      this.t2 = t2;
-      return this;
-    }
-    
-    /**
-     * Sets the angle of the image to be drawn.
-     * <p>
-     * The image will be rotated with the postivie (counter-clockwise) angle specified, in radians. By default the image will not be resized, e.g. {@code angle = 0.0}.
-     *
-     * @param angle   The positive angle (counter-clockwise) of the image to draw, in radians.
-     * @return Self, for chaining.
-     */
-    public ImageInBuilder angle(double angle) {
-      this.angle = angle;
-      return this;
-    }
-    
-    /**
-     * Sets the alpha coefficient of the image to be drawn.
-     * <p>
-     * The image alpha will be multiplied by the specified coefficient, 0.0 meaning full transparency, 1.0 meaning full opacity. By default the image will be unchanged regarding trasparency, e.g. {@code alpha = 1.0}.
-     *
-     * @param alpha   The alpha coefficient to multiply the image alpha by, between 0.0 (full transparency), and 1.0 (full opacity).
-     * @return Self, for chaining.
-     */
-    public ImageInBuilder alpha(double alpha) {
-      this.alpha = alpha;
-      return this;
-    }
-    
-    /**
-     * Sets whether the specified x/y coordinates are relative to the <b>bounds</b> center (true), or to the <b>bounds</b> lower-left corner (false).
-     * <p>
-     * If set to true, the x and y coordinates will be offset by half the <b>bounds</b> width and height respectively. By default this is false.
-     *
-     * @param centered   Whether the coordinates are relative to the <b>bounds</b> center (true) or its lower-left corner (false).
-     * @return Self, for chaining.
-     */
-    public ImageInBuilder centered(boolean centered) {
-      this.centered = centered;
-      return this;
-    }
-    
-    /**
-     * Draw the image, with the specified information passed in previous Builder calls.
-     * <p>
-     * To draw another image, call {@link Drawer#imageIn(double, double, double, double, Texture)} again.
-     */
-    public void draw() {
-      double widthRatio = texture.getWidth() / width;
-      double heightRatio = texture.getHeight() / height;
-      if (widthRatio > heightRatio) {
-        if (centered) {
-          DRAWER.drawImage(x + width / 2, y + height / 2, width, texture.getHeight() / widthRatio, s1, t1, s2, t2, texture, angle, alpha);
-        } else {
-          DRAWER.drawImage(x, y, width, texture.getHeight() / widthRatio, s1, t1, s2, t2, texture, angle, alpha);
-        }
-      } else {
-        if (centered) {
-          DRAWER.drawImage(x + width / 2, y + height / 2, texture.getWidth() / heightRatio, height, s1, t1, s2, t2, texture, angle, alpha);
-        } else {
-          DRAWER.drawImage(x, y, texture.getWidth() / heightRatio, height, s1, t1, s2, t2, texture, angle, alpha);
-        }
-      }
-    }
-  }
-  
-  bstract
-  
-  void drawImage(double x, double y, double width, double height, double s1, double t1, double s2, double t2, Texture texture, double angle, double alpha);
-  
-  protected a
   
   /**
-   * LineBuilder is a Builder-like interface that lets you specify various line-related parameters and draw a simple 1-pixel wide line with {@link #draw()}.
-   * <p>
-   * Note that, for performance, the instance returned by {@link Drawer#line(double, double, double, double)} may be the same between calls, and that the Builder-like pattern may be internally emulated by simply resetting the object between calls to {@link Drawer#line(double, double, double, double)}.
-   */
-  public static final class LineBuilder {
-    private double x1;
-    private static final LineBuilder INSTANCE = new LineBuilder();
-    private double x2;
-    private double y2;
-    private double y1;
-    private Color color;
-    
-    private static LineBuilder get(double x1, double y1, double x2, double y2) {
-      INSTANCE.x1 = x1;
-      INSTANCE.y1 = y1;
-      INSTANCE.x2 = x2;
-      INSTANCE.y2 = y2;
-      INSTANCE.color = null;
-      return INSTANCE;
-    }
-    
-    /**
-     * Sets the color of the line to be drawn.
-     * <p>
-     * If set to null, the default color will be used. By default this parameter is null, and the line will be drawn with the default color.
-     *
-     * @param color   The color to use to draw the line, or null to use the default color.
-     * @return Self, for chaining.
-     */
-    public LineBuilder color(Color color) {
-      this.color = color;
-      return this;
-    }
-    
-    /**
-     * Draw the line, with the specified information passed in previous Builder calls.
-     * <p>
-     * To draw another line, call {@link Drawer#line(double, double, double, double)} again.
-     */
-    public void draw() {
-      DRAWER.drawLineCenter((x1 + x2) / 2, (y1 + y2) / 2, Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)), Math.atan2(y2 - y1, x2 - x1), color);
-    }
-  }
-  
-  bstract
-  
-  float[] drawText(double x, double y, String text, Font font, double size, boolean xCentered, boolean yCentered, Color color);
-  
-  /**
-   * Re
-   *
-   * LineCenterBuilder is a Builder-like interface that lets you specify various line-related parameters and draw a simple 1-pixel wide line with {@link #draw()}.
-   * <p>
-   * Note that, for performance, the instance returned by {@link Drawer#lineCenter(double, double, double, double)} may be the same between calls, and that the Builder-like pattern may be internally emulated by simply resetting the object between calls to {@link Drawer#lineCenter(double, double, double, double)}.
-   */
-  public static final class LineCenterBuilder {
-    private double x;
-    private static final LineCenterBuilder INSTANCE = new LineCenterBuilder();
-    private double length;
-    private double y;
-    vprivate
-    double angle;
-    priate Color
-    color;
-    
-    private static LineCenterBuilder get(double x, double y, double length, double angle) {
-      INSTANCE.x = x;
-      INSTANCE.y = y;
-      INSTANCE.length = length;
-      INSTANCE.angle = angle;
-      INSTANCE.color = null;
-      return INSTANCE;
-    }
-    
-    /**
-     * Sets the color of the line to be drawn.
-     * <p>
-     * If set to null, the default color will be used. By default this parameter is null, and the line will be drawn with the default color.
-     *
-     * @param color   The color to use to draw the line, or null to use the default color.
-     * @return Self, for chaining.
-     */
-    public LineCenterBuilder color(Color color) {
-      this.color = color;
-      return this;
-    }
-    
-    /**
-     * Draw the line, with the specified information passed in previous Builder calls.
-     * <p>
-     * To draw another line, call {@link Drawer#lineCenter(double, double, double, double)} again.
-     */
-    public void draw() {
-      DRAWER.drawLineCenter(x, y, length, angle, color);
-    }
-  }
-  
-  /**
-   turns the line height for a specified font and font size, in pixels.
+   * Returns the line height for a specified font and font size, in pixels.
    * <p>
    * The line height is the number of vertical pixels that should be put two lines of text for this font and font size. For example, to draw two lines of text, first draw a line of text at {@code y}, then draw a second line at {@code y - getLineHeight(font, size)}.
    * <p>
@@ -582,92 +879,7 @@ public abstract class Drawer {
   }
   
   /**
-   * Re
-   ctangleBuilder is a Builder-like interface that lets you specify various rectangle-related parameters and draw/fill a rectangle with {@link #draw()}.
-   * <p>
-   * Note that, for performance, the instance returned by {@link Drawer#rectangle(double, double, double, double)} may be the same between calls, and that the Builder-like pattern may be internally emulated by simply resetting the object between calls to {@link Drawer#rectangle(double, double, double, double)}.
-   */
-  public static final class RectangleBuilder {
-    private double x;
-    private dtatic
-    final RectangleBuilder INSTANCE = new RectangleBuilder();
-    pridouble width;
-    private double y;
-    private bouble height;
-    private doolean centered;
-    private Couble angle;
-    private vate solor
-    color;
-    
-    private s
-    tatic RectangleBuilder
-  
-    get(double x, double y, double width, double height) {
-      INSTANCE.x = x;
-      INSTANCE.y = y;
-      INSTANCE.width = width;
-      INSTANCE.height = height;
-      INSTANCE.centered = false;
-      INSTANCE.angle = 0;
-      INSTANCE.color = null;
-      return INSTANCE;
-    }
-  
-    /**
-     * Sets whether the specified x/y coordinates are relative to the rectangle center (true), or to the rectangle lower-left corner (false).
-     * <p>
-     * If set to true, the x and y coordinates will be offset by half the rectangle width and height respectively. By default this is false.
-     *
-     * @param centered   Whether the coordinates are relative to the rectangle center (true) or its lower-left corner (false).
-     * @return Self, for chaining.
-     */
-    public RectangleBuilder centered(boolean centered) {
-      this.centered = centered;
-      return this;
-    }
-  
-    /**
-     * Sets the angle of the rectangle to be drawn.
-     * <p>
-     * The rectangle will be rotated with the postivie (counter-clockwise) angle specified, in radians. By default the rectangle will not be resized, e.g. {@code angle = 0.0}.
-     *
-     * @param angle   The positive angle (counter-clockwise) of the rectangle to draw, in radians.
-     * @return Self, for chaining.
-     */
-    public RectangleBuilder angle(double angle) {
-      this.angle = angle;
-      return this;
-    }
-  
-    /**
-     * Sets the color of the rectangle to be drawn.
-     * <p>
-     * If set to null, the default color will be used. By default this parameter is null, and the rectangle will be drawn with the default color.
-     *
-     * @param color   The color to use to draw the rectangle, or null to use the default color.
-     * @return Self, for chaining.
-     */
-    public RectangleBuilder color(Color color) {
-      this.color = color;
-      return this;
-    }
-  
-    /**
-     * Draw the rectangle, with the specified information passed in previous Builder calls.
-     * <p>
-     * To draw another rectangle, call {@link Drawer#rectangle(double, double, double, double)} again.
-     */
-    public void draw() {
-      if (centered) {
-        DRAWER.fillRectangle(x, y, width, height, angle, color);
-      } else {
-        DRAWER.fillRectangle(x + width / 2, y + height / 2, width, height, angle, color);
-      }
-    }
-  }
-  
-  /**
-   turns the font metrics for a specified font and font size (ascent, descent, line gap, line height).
+   * Returns the font metrics for a specified font and font size (ascent, descent, line gap, line height).
    * <p>
    * For a detailed description of the metrics, see the {@link FontMetrics} class and functions Javadoc.
    *
@@ -678,76 +890,7 @@ public abstract class Drawer {
   public abstract FontMetrics getFontMetrics(Font font, float size);
   
   /**
-   * Re
-   rcleBuilder is a Builder-like interface that lets you specify various circle-related parameters and draw/fill a circle with {@link #draw()}.
-   * <p>
-   * Note that, for performance, the instance returned by {@link Drawer#circle(double, double, double)} may be the same between calls, and that the Builder-like pattern may be internally emulated by simply resetting the object between calls to {@link Drawer#circle(double, double, double)}.
-   */
-  public static final class CircleBuilder {
-    private double x;
-    private dtatic
-    final CircleBuilder INSTANCE = new CircleBuilder();
-    
-    pridouble y;
-    private bouble radius;
-    private Coolean centered;
-    private vate solor
-    color;
-    
-    private s
-    tatic CircleBuilder
-  
-    get(double x, double y, double radius) {
-      INSTANCE.x = x;
-      INSTANCE.y = y;
-      INSTANCE.radius = radius;
-      INSTANCE.centered = false;
-      INSTANCE.color = null;
-      return INSTANCE;
-    }
-    
-    /**
-     * Sets whether the specified x/y coordinates are relative to the circle center (true), or to the circle's square bounds lower-left corner (false).
-     * <p>
-     * If set to true, the x and y coordinates will be offset by half the circle's square bounds width and height respectively, that is, by the circle radius. By default this is false.
-     *
-     * @param centered   Whether the coordinates are relative to the circle center (true) or its square bounds lower-left corner (false).
-     * @return Self, for chaining.
-     */
-    public CircleBuilder centered(boolean centered) {
-      this.centered = centered;
-      return this;
-    }
-    
-    /**
-     * Sets the color of the circle to be drawn.
-     * <p>
-     * If set to null, the default color will be used. By default this parameter is null, and the circle will be drawn with the default color.
-     *
-     * @param color   The color to use to draw the circle, or null to use the default color.
-     * @return Self, for chaining.
-     */
-    public CircleBuilder color(Color color) {
-      this.color = color;
-      return this;
-    }
-    
-    /**
-     * Draw the circle, with the specified information passed in previous Builder calls.
-     * <p>
-     * To draw another circle, call {@link Drawer#circle(double, double, double)} again.
-     */
-    public void draw() {
-      if (centered) {
-        DRAWER.fillRing(x, y, radius, 0, color);
-      } else {
-        DRAWER.fillRing(x + radius / 2, y + radius / 2, radius, 0, color);
-      }
-    }
-  }
-  
-  /**
-   turns the width, in pixels, of the specified text, if it were to be drawn with the specified font and font size, that is the "x" length from the start position of the first character of the text, to the start position for the (hypothetical) next character after the last character of the text.
+   * Returns the width, in pixels, of the specified text, if it were to be drawn with the specified font and font size, that is the "x" length from the start position of the first character of the text, to the start position for the (hypothetical) next character after the last character of the text.
    *
    * @param text The text to get the width of, must be non-null (the width of the empty string is always 0).
    * @param font The font for which to get the width of the text, must be non-null.
@@ -760,77 +903,7 @@ public abstract class Drawer {
   }
   
   /**
-   * Re
-   ngBuilder is a Builder-like interface that lets you specify various ring-related parameters and draw/fill a ring with {@link #draw()}. A ring is the difference between an outer circle of radius {@code radius} and a inner circle of radius {@code radius - width}.
-   * <p>
-   * Note that, for performance, the instance returned by {@link Drawer#ring(double, double, double, double)} may be the same between calls, and that the Builder-like pattern may be internally emulated by simply resetting the object between calls to {@link Drawer#ring(double, double, double, double)}.
-   */
-  public static final class RingBuilder {
-    private double x;
-    private dtatic
-    final RingBuilder INSTANCE = new RingBuilder();
-    pridouble radius;
-    private double y;
-    private bouble width;
-    private Coolean centered;
-    private vate solor
-    color;
-    
-    private s
-    tatic RingBuilder
-  
-    get(double x, double y, double radius, double width) {
-      INSTANCE.x = x;
-      INSTANCE.y = y;
-      INSTANCE.radius = radius;
-      INSTANCE.width = width;
-      INSTANCE.centered = false;
-      INSTANCE.color = null;
-      return INSTANCE;
-    }
-  
-    /**
-     * Sets whether the specified x/y coordinates are relative to the ring center (true), or to the ring's square bounds lower-left corner (false).
-     * <p>
-     * If set to true, the x and y coordinates will be offset by half the ring's square bounds width and height respectively, that is, by the ring radius. By default this is false.
-     *
-     * @param centered   Whether the coordinates are relative to the ring center (true) or its square bounds lower-left corner (false).
-     * @return Self, for chaining.
-     */
-    public RingBuilder centered(boolean centered) {
-      this.centered = centered;
-      return this;
-    }
-  
-    /**
-     * Sets the color of the ring to be drawn.
-     * <p>
-     * If set to null, the default color will be used. By default this parameter is null, and the ring will be drawn with the default color.
-     *
-     * @param color   The color to use to draw the ring, or null to use the default color.
-     * @return Self, for chaining.
-     */
-    public RingBuilder color(Color color) {
-      this.color = color;
-      return this;
-    }
-  
-    /**
-     * Draw the ring, with the specified information passed in previous Builder calls.
-     * <p>
-     * To draw another ring, call {@link Drawer#ring(double, double, double, double)} again.
-     */
-    public void draw() {
-      if (centered) {
-        DRAWER.fillRing(x, y, radius, width, color);
-      } else {
-        DRAWER.fillRing(x + radius / 2, y + radius / 2, radius, width, color);
-      }
-    }
-  }
-  
-  /**
-   turns the positions of all characters in the text, would they be drawn with the specified font and font size, starting at x position 0, in pixels, followed by the total width of the text.
+   * Returns the positions of all characters in the text, would they be drawn with the specified font and font size, starting at x position 0, in pixels, followed by the total width of the text.
    * <p>
    * This method is equivalent to the following, but is much more efficient:
    * <code> for(int i=0; i{@literal <}=text.length(); i++) result[i] = getTextWidth(text.substring(0, i), font, size); </code>
@@ -844,154 +917,15 @@ public abstract class Drawer {
    */
   public abstract float[] getTextPositions(String text, Font font, float size);
   
+  
   /**
-   * Se
-   xtBuilder is a Builder-like interface that lets you specify various text-related parameters and draw text with {@link #draw()}.
+   * Sets the default color of the {@link Drawer} to be used for the rendering of geometric shapes and text.
    * <p>
-   * This will only render a single line of text without line feeds, additionally not all Unicode characters are supported (please open an issue if you need more characters).
+   * The alpha value of the color will be taken into account, that is, if the transparency isn't set to fully opaque, it will not be ignored.
    * <p>
-   * Note that, for performance, the instance returned by {@link Drawer#text(double, double, String, Font, double)} may be the same between calls, and that the Builder-like pattern may be internally emulated by simply resetting the object between calls to {@link Drawer#text(double, double, String, Font, double)}.
+   * Note that most drawing operations color can override the default color in the use of their Builder-specific {@code color(Color color)} methods.
+   *
+   * @param color The default color to set and use for the rendering of geometric shapes and text, must be non-null.
    */
-  public static final class TextBuilder {
-    private double x;
-    private dtatic
-    final TextBuilder INSTANCE = new TextBuilder();
-    
-    priSouble y;
-    private Ftring text;
-    private dont font;
-    private bouble size;
-    private boolean yCentered;
-    private Coolean xCentered;
-    private vate solor
-    color;
-    
-    private s
-    tatic TextBuilder
-    
-    get(double x, double y, String text, Font font, double size) {
-      INSTANCE.x = x;
-      INSTANCE.y = y;
-      INSTANCE.text = text;
-      INSTANCE.font = font;
-      INSTANCE.size = size;
-      INSTANCE.xCentered = false;
-      INSTANCE.yCentered = false;
-      INSTANCE.color = null;
-      return INSTANCE;
-    }
-    
-    /**
-     * Sets whether the specified x and y coordinates are relative to the text bounds center (true) (width and height respectively), or to the text bounds lower-left corner (false) (width and height respectively).
-     * <p>
-     * If set to true, the x and y coordinates will be offset by half the text bounds width and height respectively. By default both values are false.
-     *
-     * @param xCentered   Whether the x coordinate is relative to the text bound center (true) or its lower-left corner (false).
-     * @param yCentered   Whether the y coordinate is relative to the text bound center (true) or its lower-left corner (false).
-     * @return Self, for chaining.
-     */
-    public TextBuilder centered(boolean xCentered, boolean yCentered) {
-      this.xCentered = xCentered;
-      this.yCentered = yCentered;
-      return this;
-    }
-    
-    /**
-     * Sets the color of the text to be drawn.
-     * <p>
-     * If set to null, the default color will be used. By default this parameter is null, and the text will be drawn with the default color.
-     *
-     * @param color   The color to use to draw the text, or null to use the default color.
-     * @return Self, for chaining.
-     */
-    public TextBuilder color(Color color) {
-      this.color = color;
-      return this;
-    }
-    
-    /**
-     * Draws the text, with the specified information passed in previous Builder calls, and returns the positions of all characters in the text, followed by the text bounds width.
-     * <p>
-     * If only the total width of the drawn text is needed, use {@link #getTextWidth(String, Font, float)}. It is more efficient to use this method to draw text and get the drawn characters positions in one go than running {@link #draw()} then {@link #getTextPositions(String, Font, float)}.
-     * <p>
-     * The total width of all drawn characters can be obtained by getting the last element of the array, or 0 if it is empty.
-     * <p>
-     * To draw another text, call {@link Drawer#text(double, double, String, Font, double)} again.
-     *
-     * @return The positions of all characters in the text, followed by the total width of the text, in pixels, as an array of {@code text.length() + 1} numbers, as if returned by {@link Drawer#getTextPositions(String, Font, float)}.
-     * @see #draw()
-     */
-    public float[] drawGetPositions() {
-      return DRAWER.drawText(x, y, text, font, size, xCentered, yCentered, color);
-    }
-    
-    /**
-     * Draws the text, with the specified information passed in previous Builder calls, and returns how much to advance the x position (the text bounds width).
-     * <p>
-     * To draw another text, call {@link Drawer#text(double, double, String, Font, double)} again.
-     * <p>
-     * You may use {@link #drawGetPositions()} to efficiently get the x offset of all the characters that were drawn instead of the total text bounds width.
-     *
-     * @return The text bounds width, that is how much to advance the x position, if drawing some text just after the one that was drawn.
-     * @see #drawGetPositions()
-     */
-    public float draw() {
-      float[] positions = drawGetPositions();
-      return positions[positions.length - 1];
-    }
-  }
-  
-  protectts the
-  default color of
-  the
-  
-  {@link Drawer}
-  
-  to be
-  used for
-  the rendering
-  of geometric
-  shapes and
-  text.
-   * <p>
-   *
-  The alpha
-  value of
-  the color
-  will be
-  taken into
-  account,
-  that is, if
-  the transparency
-  isn't set to fully opaque, it will not be ignored.
-          * <p>
-   *
-  Note that
-  most drawing
-  operations color
-  can override
-  the
-  default color in
-  the use
-  of their
-  Builder-specific
-  
-  {@code color(Color color)}
-  
-  methods.
-   *
-           *
-  @param
-  color The
-  default color to
-  set and
-  use for
-  the rendering
-  of geometric
-  shapes and
-  text,
-  must be
-  non-null.
-          */
   public abstract void setColor(Color color);
 }
